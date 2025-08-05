@@ -105,9 +105,10 @@
             document.getElementById('summarize').disabled = true;
 
             fetch("/api/summary/short/1")
-                .then(response => {
+                .then(async response => {
                     if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
+                        const errorDetail = (await response.json()).detail;
+                        throw new Error(`HTTP error! Status: ${response.status} ${errorDetail}`);
                     }
                     return response.json();
                 })
@@ -125,9 +126,10 @@
                 });
 
             fetch("/api/questions/1")
-                .then(response => {
+                .then(async response => {
                     if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
+                        const errorDetail = (await response.json()).detail;
+                        throw new Error(`HTTP error! Status: ${response.status} ${errorDetail}`);
                     }
                     return response.json();
                 })

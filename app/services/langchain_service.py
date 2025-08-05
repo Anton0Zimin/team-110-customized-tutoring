@@ -2,6 +2,8 @@ import boto3
 from langchain.prompts import PromptTemplate
 from langchain_aws import ChatBedrock
 from langchain_core.output_parsers import StrOutputParser
+from fastapi import HTTPException
+import botocore.exceptions
 
 class LangChainService:
     def __init__(self):
@@ -22,10 +24,14 @@ class LangChainService:
         )
 
     def invoke_model(self, prompt):
-        # invoke
-        response = self._chat_model.invoke(prompt)
+        try:
+            # invoke
+            response = self._chat_model.invoke(prompt)
 
-        # Configure a Chain to parse output
-        chain = StrOutputParser()
-        formatted_response = chain.invoke(response)
-        return formatted_response
+            # Configure a Chain to parse output
+            chain = StrOutputParser()
+            formatted_response = chain.invoke(response)
+            return formatted_response
+        except botocore.exceptions.ClientError as error:
+            error_code = error.response['Error']['Code']
+            raise HTTPException(status_code=500, detail=f"Error invoking model: {error_code}") from error
