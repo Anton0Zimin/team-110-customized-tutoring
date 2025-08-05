@@ -47,33 +47,39 @@
 
         document.getElementById('loginLink').href = loginUrl;
 
-        if (code !== null) {
-            getToken();
-        }
-        else {
+        if (code == null) {
             document.location = loginUrl;
         }
-
-        function getToken() {
-            fetch("/api/login/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ code })
-            })
-            .then(res => res.json())
-            .then(data => {
-                console.log("Server response:", data);
-                document.getElementById('title').innerText = 'Team 110 Customized Tutoring (' + data.name + ')';
-                accessCode = data.access_code;
-
-                loadSection();
-            })
-            .catch(err => {
-                console.error("Error sending code:", err);
-            });
+        else {
+            getToken();
         }
+
+        async function getToken() {
+            try {
+                const response = await fetch("/api/login/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ code })
+                });
+
+                const json = await response.json();
+
+                if (response.ok) {
+                    console.log("Server response:", json);
+                    document.getElementById('title').innerText = 'Team 110 Customized Tutoring (' + json.name + ')';
+                    accessCode = json.access_code;
+
+                    loadSection();
+                }
+                else {
+                    document.location = loginUrl;
+                }
+            }
+            catch (error) {
+                console.error("Fetch error:", error);
+            }
 
         let divSummary = document.getElementById('summary');
         let divQuestion = document.getElementById('question');
@@ -172,6 +178,7 @@
                     console.error("Fetch error:", error);
                     divQuestion.innerText = error;
                 });
+            }
         }
     </script>
 </body>
