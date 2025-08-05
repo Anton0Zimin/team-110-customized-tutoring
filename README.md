@@ -27,8 +27,8 @@ cd app
 uvicorn main:app --reload
 ```
 
-- [Local App](http://127.0.0.1:8000)
-- [API Docs](http://127.0.0.1:8000/docs)
+- [Local App](http://localhost:8000)
+- [API Docs](http://localhost:8000/docs)
 
 ## Copyrighted Materials
 

@@ -11,7 +11,7 @@
 
 <body>
     <main class="container">
-        <h1>Team 110 Customized Tutoring</h1>
+        <h1 id="title">Team 110 Customized Tutoring</h1>
 
         <button id="summarize">Summarize</button>
 
@@ -28,6 +28,27 @@
     </main>
 
     <script>
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        let accessCode = null;
+
+        fetch("/api/login/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ code })
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log("Server response:", data);
+            document.getElementById('title').innerText = 'Team 110 Customized Tutoring (' + data.name + ')';
+            accessCode = data.access_code;
+        })
+        .catch(err => {
+            console.error("Error sending code:", err);
+        });
+
         let divSummary = document.getElementById('summary');
         let divQuestion = document.getElementById('question');
 
