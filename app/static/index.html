@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <title>Team 110 Customized Tutoring</title>
+</head>
+
+<body>
+    <main class="container">
+        <h1 id="title">Team 110 Customized Tutoring</h1>
+    </main>
+
+    <script>
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        let accessToken = null;
+
+        // Get the current authority (host + optional port)
+        const authority = window.location.host;  // e.g. "localhost:8000"
+
+        // Construct the redirect_uri using current protocol + authority
+        const redirectUri = `${window.location.protocol}//${authority}`;
+
+        // URL-encode redirect_uri
+        const encodedRedirectUri = encodeURIComponent(redirectUri);
+
+        // Build the login URL with the dynamic redirect_uri
+        const loginUrl = `https://us-west-2zzdauxshh.auth.us-west-2.amazoncognito.com/login?client_id=7j8rf968khgtniemievdcs22lv&response_type=code&scope=email+openid+profile&redirect_uri=${encodedRedirectUri}`;
+
+        if (code == null) {
+            document.location = loginUrl;
+        }
+        else {
+            getToken();
+        }
+
+        async function getToken() {
+            try {
+                const response = await fetch("/api/login/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ code })
+                });
+
+                const json = await response.json();
+
+                if (response.ok) {
+                    console.log("Server response:", json);
+                    document.getElementById('title').innerText = 'Team 110 Customized Tutoring (' + json.name + ')';
+                    accessToken = json.access_token;
+
+                    document.getElementById('loginLink').style.display = 'none';
+                }
+                else {
+                    document.location = loginUrl;
+                }
+            }
+            catch (error) {
+                console.error("Fetch error:", error);
+            }
+        }
+    </script>
+</body>
+
+</html>
