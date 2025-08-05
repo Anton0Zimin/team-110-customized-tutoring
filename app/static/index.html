@@ -13,6 +13,7 @@
     <main class="container">
         <h1 id="title">Team 110 Customized Tutoring</h1>
 
+        <a id="loginLink">Log in</a>
         <button id="summarize">Summarize</button>
 
         <div class="grid">
@@ -32,42 +33,69 @@
         const code = url.searchParams.get("code");
         let accessCode = null;
 
-        fetch("/api/login/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ code })
-        })
-        .then(res => res.json())
-        .then(data => {
-            console.log("Server response:", data);
-            document.getElementById('title').innerText = 'Team 110 Customized Tutoring (' + data.name + ')';
-            accessCode = data.access_code;
-        })
-        .catch(err => {
-            console.error("Error sending code:", err);
-        });
+        // Get the current authority (host + optional port)
+        const authority = window.location.host;  // e.g. "localhost:8000"
+
+        // Construct the redirect_uri using current protocol + authority
+        const redirectUri = `${window.location.protocol}//${authority}`;
+
+        // URL-encode redirect_uri
+        const encodedRedirectUri = encodeURIComponent(redirectUri);
+
+        // Build the login URL with the dynamic redirect_uri
+        const loginUrl = `https://us-west-2zzdauxshh.auth.us-west-2.amazoncognito.com/login?client_id=7j8rf968khgtniemievdcs22lv&response_type=code&scope=email+openid+profile&redirect_uri=${encodedRedirectUri}`;
+
+        document.getElementById('loginLink').href = loginUrl;
+
+        if (code !== null) {
+            getToken();
+        }
+        else {
+            document.location = loginUrl;
+        }
+
+        function getToken() {
+            fetch("/api/login/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ code })
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log("Server response:", data);
+                document.getElementById('title').innerText = 'Team 110 Customized Tutoring (' + data.name + ')';
+                accessCode = data.access_code;
+
+                loadSection();
+            })
+            .catch(err => {
+                console.error("Error sending code:", err);
+            });
+        }
 
         let divSummary = document.getElementById('summary');
         let divQuestion = document.getElementById('question');
 
-        fetch('/api/summary/full/1')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.text();
-            })
-            .then(text => {
-                divSummary.innerHTML = text.replace(/\n/g, '<br>');
-            })
-            .catch(error => {
-                console.error("Fetch error:", error);
-                divSummary.innerText = error;
-            });
+        function loadSection() {
+            fetch('/api/summary/full/1')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    divSummary.innerHTML = text.replace(/\n/g, '<br>');
+                })
+                .catch(error => {
+                    console.error("Fetch error:", error);
+                    divSummary.innerText = error;
+                });
 
-        document.getElementById('summarize').addEventListener('click', summarize);
+            document.getElementById('summarize').addEventListener('click', summarize);
+        }
 
         function summarize() {
             divSummary.innerText = '⌛';
