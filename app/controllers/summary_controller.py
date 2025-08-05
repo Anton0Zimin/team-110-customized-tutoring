@@ -5,14 +5,14 @@ import json
 
 router = APIRouter(prefix="/api/summary", tags=["summary"])
 
-@router.get("/full/{id}", response_class = PlainTextResponse)
-async def get_full(id: int):
+@router.get("/full/{section_id}", response_class = PlainTextResponse)
+async def get_full(section_id: int):
     summary_service = SummaryService()
-    return summary_service.get_full()
+    return summary_service.get_full(section_id)
 
-@router.get("/short/{id}")
-async def get_summary(id: int):
+@router.get("/short/{section_id}")
+async def get_summary(section_id: int):
     summary_service = SummaryService()
-    summary_string = summary_service.get_summary()
+    summary_string = summary_service.get_summary(section_id)
     summary = json.loads(summary_string)
     return summary

@@ -1,5 +1,6 @@
 from langchain.prompts import PromptTemplate
 from services.langchain_service import LangChainService
+from services.content_service import ContentService
 
 class QuestionService:
     def __init__(self):
@@ -18,11 +19,10 @@ class QuestionService:
                 """
                 )
 
-    def get_questions(self):
+    def get_questions(self, section_id):
         lang_chain_service = LangChainService()
 
-        with open('content/24.1_says_law_and_the_macroeconomics_of_supply.txt', 'r', encoding='utf-8') as file:
-            content = file.read()
+        content = ContentService().read_section(section_id)
 
         with open('content/question_example.json', 'r', encoding='utf-8') as file:
             example = file.read()

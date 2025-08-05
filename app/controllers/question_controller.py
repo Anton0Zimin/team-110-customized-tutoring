@@ -4,9 +4,9 @@ import json
 
 router = APIRouter(prefix="/api/questions", tags=["questions"])
 
-@router.get("/{id}")
-async def get_questions(id: int):
+@router.get("/{section_id}")
+async def get_questions(section_id: int):
     question_service = QuestionService()
-    questions_string = question_service.get_questions()
+    questions_string = question_service.get_questions(section_id)
     questions = json.loads(questions_string)
     return questions
