@@ -82,12 +82,17 @@
             catch (error) {
                 console.error("Fetch error:", error);
             }
+        }
 
         let divSummary = document.getElementById('summary');
         let divQuestion = document.getElementById('question');
 
         function loadSection() {
-            fetch('/api/summary/full/1')
+            fetch('/api/summary/full/1', {
+                    headers: {
+                        "Authorization": `Bearer ${accessCode}`
+                    }
+                })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -112,7 +117,11 @@
             document.getElementById('questionTitle').innerText = 'Question';
             document.getElementById('summarize').disabled = true;
 
-            fetch("/api/summary/short/1")
+            fetch("/api/summary/short/1", {
+                    headers: {
+                        "Authorization": `Bearer ${accessCode}`
+                    }
+                })
                 .then(async response => {
                     if (!response.ok) {
                         const errorDetail = (await response.json()).detail;
@@ -133,7 +142,11 @@
                     divSummary.innerText = error;
                 });
 
-            fetch("/api/questions/1")
+            fetch("/api/questions/1", {
+                    headers: {
+                        "Authorization": `Bearer ${accessCode}`
+                    }
+                })
                 .then(async response => {
                     if (!response.ok) {
                         const errorDetail = (await response.json()).detail;
@@ -180,7 +193,6 @@
                     console.error("Fetch error:", error);
                     divQuestion.innerText = error;
                 });
-            }
         }
     </script>
 </body>
