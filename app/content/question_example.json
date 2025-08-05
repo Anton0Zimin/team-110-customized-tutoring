@@ -1,0 +1,9 @@
+{
+  "question": "Which AWS service is best suited for container orchestration?",
+  "answers": [
+    { "text": "AWS Lambda", "is_correct": false },
+    { "text": "Amazon ECS", "is_correct": true },
+    { "text": "AWS CloudTrail", "is_correct": false },
+    { "text": "Amazon S3", "is_correct": false }
+  ]
+}

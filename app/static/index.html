@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <title>Team 110 Customized Tutoring</title>
+</head>
+
+<body>
+    <main class="container">
+        <h1>Team 110 Customized Tutoring</h1>
+
+        <button id="summarize">Summarize</button>
+
+        <div class="grid">
+            <div>
+                <h2 id="summaryTitle">Full Section</h2>
+                <div id="summary"></div>
+            </div>
+            <div>
+                <h2 id="questionTitle"></h2>
+                <div id="question"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let divSummary = document.getElementById('summary');
+        let divQuestion = document.getElementById('question');
+
+        fetch('/api/summary/full/1')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                divSummary.innerHTML = text.replace(/\n/g, '<br>');
+            })
+            .catch(error => {
+                console.error("Fetch error:", error);
+                divSummary.innerText = error;
+            });
+
+        document.getElementById('summarize').addEventListener('click', summarize);
+
+        function summarize() {
+            divSummary.innerText = '⌛';
+            divQuestion.innerText = '⌛';
+            document.getElementById('summaryTitle').innerText = 'Summary';
+            document.getElementById('questionTitle').innerText = 'Question';
+            document.getElementById('summarize').disabled = true;
+
+            fetch("/api/summary/short/1")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    divSummary.innerText = '';
+
+                    for (row of data.summary) {
+                        let text = document.createTextNode(row + ' ');
+                        divSummary.appendChild(text);
+                    }
+                })
+                .catch(error => {
+                    console.error("Fetch error:", error);
+                    divSummary.innerText = error;
+                });
+
+            fetch("/api/questions/1")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    divQuestion.innerText = '';
+
+                    let questionIndex = 0;
+                    let radioIndex = 0;
+
+                    for (item of data.questions) {
+                        const p = document.createElement('p');
+                        p.innerText = item.question;
+                        divQuestion.appendChild(p);
+
+                        for (answer of item.answers) {
+                            const div = document.createElement('div');
+
+                            const radio = document.createElement('input');
+                            radio.name = 'radioQuestion' + questionIndex;
+                            radio.id = 'radio' + radioIndex;
+                            radio.type = 'radio';
+                            div.appendChild(radio);
+
+                            const label = document.createElement('label');
+                            label.htmlFor = radio.id;
+                            label.innerText = answer.text;
+                            div.appendChild(label);
+
+                            divQuestion.appendChild(div);
+                            radioIndex++;
+                        }
+
+                        const p2 = document.createElement('p');
+                        p2.innerHTML = '&nbsp;';
+                        divQuestion.appendChild(p2);
+                        questionIndex++;
+                    }
+                })
+                .catch(error => {
+                    console.error("Fetch error:", error);
+                    divQuestion.innerText = error;
+                });
+        }
+    </script>
+</body>
+
+</html>
