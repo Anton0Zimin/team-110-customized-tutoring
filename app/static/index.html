@@ -31,7 +31,7 @@
     <script>
         const url = new URL(window.location.href);
         const code = url.searchParams.get("code");
-        let accessCode = null;
+        let accessToken = null;
 
         // Get the current authority (host + optional port)
         const authority = window.location.host;  // e.g. "localhost:8000"
@@ -69,7 +69,7 @@
                 if (response.ok) {
                     console.log("Server response:", json);
                     document.getElementById('title').innerText = 'Team 110 Customized Tutoring (' + json.name + ')';
-                    accessCode = json.access_code;
+                    accessToken = json.access_token;
 
                     document.getElementById('loginLink').style.display = 'none';
 
@@ -90,7 +90,7 @@
         function loadSection() {
             fetch('/api/summary/full/1', {
                     headers: {
-                        "Authorization": `Bearer ${accessCode}`
+                        "Authorization": `Bearer ${accessToken}`
                     }
                 })
                 .then(response => {
@@ -119,7 +119,7 @@
 
             fetch("/api/summary/short/1", {
                     headers: {
-                        "Authorization": `Bearer ${accessCode}`
+                        "Authorization": `Bearer ${accessToken}`
                     }
                 })
                 .then(async response => {
@@ -144,7 +144,7 @@
 
             fetch("/api/questions/1", {
                     headers: {
-                        "Authorization": `Bearer ${accessCode}`
+                        "Authorization": `Bearer ${accessToken}`
                     }
                 })
                 .then(async response => {
