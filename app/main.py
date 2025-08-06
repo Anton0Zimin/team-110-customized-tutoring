@@ -22,6 +22,7 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 # Define your allowed origins (e.g., frontend on localhost)
 origins = [
     "http://localhost:8000",  # React, Vite, etc.
+    "http://localhost:3000",
     "http://customized-training.org"
 ]
 
