@@ -146,7 +146,7 @@ async def login(request: RegisterRequest):
         UserPoolId=COGNITO_USER_POOL_ID,
         Username=user.email,
         UserAttributes=[
-            {'Name': 'email', 'Value': 'user.email'},
+            {'Name': 'email', 'Value': user.email},
             {'Name': 'email_verified', 'Value': 'true'},  # optional but recommended
             {'Name': 'custom:role', 'Value': user.role},  # optional but recommended
         ],
