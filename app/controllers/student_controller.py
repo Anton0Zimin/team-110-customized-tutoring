@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/students", tags=["students"])
 
-@router.get("/")
+@router.get("/{student_id}")
 async def get_student(student_id: str):
     # Initialize DynamoDB client or resource
     dynamodb = boto3.resource('dynamodb')
