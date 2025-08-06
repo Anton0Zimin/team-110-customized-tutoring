@@ -23,3 +23,20 @@ async def create_student(student: StudentProfile):
 
     student_service.add_student(student)
     return {"detail": "Student was created."}
+
+@router.put("/{student_id}")
+async def create_or_update_student(student: StudentProfile, student_id: str):
+    student_service = StudentService()
+
+    student_service.add_student(student)
+    return {"detail": "Student was created/updated."}
+
+@router.get("/")
+def get_all_students():
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('Students')  # replace with your table name
+
+    response = table.scan()
+    items = response.get('Items', [])
+
+    return items
