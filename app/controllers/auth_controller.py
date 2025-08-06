@@ -1,3 +1,4 @@
+from uuid import UUID, uuid4
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import logging
@@ -5,10 +6,13 @@ from jose import jwt
 from typing import Optional
 import os
 import httpx
+from enum import Enum
+import boto3
+from boto3.dynamodb.conditions import Key
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/login", tags=["login"])
+router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 COGNITO_DOMAIN = os.getenv("COGNITO_DOMAIN")
 COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
@@ -24,7 +28,7 @@ class LoginResponse(BaseModel):
     name: str
     access_token: str
 
-@router.post("/")
+@router.post("/login/")
 async def login(request: LoginRequest):
     logger.debug(request)
 
@@ -100,3 +104,57 @@ async def verify_jwt_token(tokens: dict) -> Optional[dict]:
     except Exception as e:
         logger.error("Failed to verify JWT token", exc_info=e)
         return None
+
+class Role(str, Enum):
+    Student = "Student"
+    Tutor = "Tutor"
+
+class RegisterRequest(BaseModel):
+    email: str
+    display_name: str
+    role: Role
+
+class UserProfile(BaseModel):
+    user_id: str
+    email: str
+    display_name: str
+    role: Role
+
+@router.post("/register/")
+async def login(request: RegisterRequest):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('Users')
+
+    response = table.query(
+        IndexName='email-index',  # your GSI name
+        KeyConditionExpression=Key('email').eq(request.email)
+    )
+
+    items = response.get('Items', [])
+    if items:
+        raise HTTPException(status_code=400, detail="User already exists")
+
+    user = UserProfile(user_id=str(uuid4()),
+                       email=request.email,
+                       display_name=request.display_name,
+                       role=request.role)
+
+
+    cognito_client = boto3.client('cognito-idp')
+
+    response = cognito_client.admin_create_user(
+        UserPoolId=COGNITO_USER_POOL_ID,
+        Username=user.email,
+        UserAttributes=[
+            {'Name': 'email', 'Value': user.email},
+            {'Name': 'email_verified', 'Value': 'true'},  # optional but recommended
+            {'Name': 'custom:role', 'Value': user.role},  # optional but recommended
+        ],
+        TemporaryPassword='TempPass123!',  # User must change this at first login
+        MessageAction='SUPPRESS'  # Optional: suppress sending invitation email
+    )
+
+    # Replace with your actual primary key and value
+    response = table.put_item(
+        Item = user.model_dump()
+    )
