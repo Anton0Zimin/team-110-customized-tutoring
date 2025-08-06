@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException
 import logging
 import boto3
+from models.student_profile import StudentProfile
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/students", tags=["students"])
 
-@router.get("/{student_id}")
+@router.get("/{student_id}", response_model=StudentProfile)
 async def get_student(student_id: str):
     # Initialize DynamoDB client or resource
     dynamodb = boto3.resource('dynamodb')
