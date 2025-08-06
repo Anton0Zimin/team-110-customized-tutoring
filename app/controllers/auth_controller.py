@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 import logging
 from jose import jwt
 from typing import Optional
@@ -110,13 +110,12 @@ class Role(str, Enum):
     Tutor = "Tutor"
 
 class RegisterRequest(BaseModel):
-    email: str
+    user_id: constr(pattern=r'^\d{8}$')
     display_name: str
     role: Role
 
 class UserProfile(BaseModel):
-    user_id: str
-    email: str
+    user_id: constr(pattern=r'^\d{8}$')
     display_name: str
     role: Role
 
@@ -125,28 +124,32 @@ async def login(request: RegisterRequest):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('Users')
 
-    response = table.query(
-        IndexName='email-index',  # your GSI name
-        KeyConditionExpression=Key('email').eq(request.email)
+    # Replace with your actual primary key and value
+    response = table.get_item(
+        Key={
+            'user_id': request.user_id
+        }
     )
 
-    items = response.get('Items', [])
-    if items:
+    # Check if the item exists
+    item = response.get('Item')
+
+    if item:
         raise HTTPException(status_code=400, detail="User already exists")
 
-    user = UserProfile(user_id=str(uuid4()),
-                       email=request.email,
+    email = request.user_id + '@customized-training.org'
+    user = UserProfile(user_id=request.user_id,
+                       email="email",
                        display_name=request.display_name,
                        role=request.role)
-
 
     cognito_client = boto3.client('cognito-idp')
 
     response = cognito_client.admin_create_user(
         UserPoolId=COGNITO_USER_POOL_ID,
-        Username=user.email,
+        Username=request.user_id,
         UserAttributes=[
-            {'Name': 'email', 'Value': user.email},
+            {'Name': 'email', 'Value': email},
             {'Name': 'email_verified', 'Value': 'true'},  # optional but recommended
             {'Name': 'custom:role', 'Value': user.role},  # optional but recommended
         ],
