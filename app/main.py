@@ -4,6 +4,7 @@ load_dotenv()
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from controllers import login_controller
+from controllers import student_controller
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,6 +12,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 app = FastAPI()
 app.include_router(login_controller.router)
+app.include_router(student_controller.router)
 
 # Mount the 'static' directory at the '/static' URL path
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
