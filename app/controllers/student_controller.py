@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 import logging
 import boto3
-from models.student_profile import StudentProfile
+from models import StudentProfile
 
 logger = logging.getLogger(__name__)
 
