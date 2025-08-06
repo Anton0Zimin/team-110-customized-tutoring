@@ -54,8 +54,6 @@
                     console.log("Server response:", json);
                     document.getElementById('title').innerText = 'Team 110 Customized Tutoring (' + json.name + ')';
                     accessToken = json.access_token;
-
-                    document.getElementById('loginLink').style.display = 'none';
                 }
                 else {
                     document.location = loginUrl;
