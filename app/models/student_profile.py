@@ -27,6 +27,7 @@ class LearningPreferences(BaseModel):
 
 class StudentProfile(BaseModel):
     student_id: str
+    display_name: str
     primary_disability: str
     preferred_subjects: List[str]
     accommodations_needed: List[str]
