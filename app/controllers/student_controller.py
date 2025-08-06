@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 import logging
 import boto3
 from models import StudentProfile
+from services import StudentService
 
 logger = logging.getLogger(__name__)
 
@@ -9,22 +10,16 @@ router = APIRouter(prefix="/api/students", tags=["students"])
 
 @router.get("/{student_id}", response_model=StudentProfile)
 async def get_student(student_id: str):
-    # Initialize DynamoDB client or resource
-    dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('Students')
+    student_service = StudentService()
+    return student_service.get_student(student_id)
 
-    # Replace with your actual primary key and value
-    response = table.get_item(
-        Key={
-            'student_id': student_id
-        }
-    )
+@router.post("/")
+async def create_student(student: StudentProfile):
+    student_service = StudentService()
+    existing_student = student_service.get_student(student.student_id)
 
-    # Check if the item exists
-    item = response.get('Item')
-    if item:
-        logger.debug("Item found:", item)
-    else:
-        logger.debug("Item not found.")
+    if existing_student:
+        raise HTTPException(status_code=400, detail="Student already exists")
 
-    return item
+    student_service.add_student(student)
+    return {"detail": "Student was created."}
