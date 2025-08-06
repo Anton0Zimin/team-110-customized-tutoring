@@ -139,6 +139,21 @@ async def login(request: RegisterRequest):
                        display_name=request.display_name,
                        role=request.role)
 
+
+    cognito_client = boto3.client('cognito-idp')
+
+    response = cognito_client.admin_create_user(
+        UserPoolId=COGNITO_USER_POOL_ID,
+        Username=user.email,
+        UserAttributes=[
+            {'Name': 'email', 'Value': 'user.email'},
+            {'Name': 'email_verified', 'Value': 'true'},  # optional but recommended
+            {'Name': 'custom:role', 'Value': user.role},  # optional but recommended
+        ],
+        TemporaryPassword='TempPass123!',  # User must change this at first login
+        MessageAction='SUPPRESS'  # Optional: suppress sending invitation email
+    )
+
     # Replace with your actual primary key and value
     response = table.put_item(
         Item = user.model_dump()
