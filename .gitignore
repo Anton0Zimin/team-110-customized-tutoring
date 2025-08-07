@@ -207,5 +207,5 @@ __marimo__/
 
 frontend/out/
 .DS_Store
-app/prompts/
+app/prompts/*.txt
 container-defs.json
