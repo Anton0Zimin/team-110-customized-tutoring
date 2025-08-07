@@ -108,7 +108,7 @@ class UserProfile(BaseModel):
     role: Role
 
 @router.post("/register")
-async def login(request: RegisterRequest):
+async def register(request: RegisterRequest):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('Users')
 
