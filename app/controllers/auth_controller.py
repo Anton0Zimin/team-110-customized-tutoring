@@ -24,6 +24,8 @@ class LoginRequest(BaseModel):
     redirect_uri: str # http://localhost:3000
 
 class LoginResponse(BaseModel):
+    user_id: str
+    role: str
     email: str
     name: str
     access_token: str
@@ -39,8 +41,10 @@ async def login(request: LoginRequest):
     logger.debug(jwt_decoded)
 
     response = LoginResponse(
+        user_id=jwt_decoded["cognito:username"],
         email=jwt_decoded["email"],
         name=jwt_decoded["name"],
+        role=jwt_decoded["custom:role"],
         access_token=tokens["access_token"]
     )
 
@@ -105,8 +109,8 @@ async def verify_jwt_token(tokens: dict) -> Optional[dict]:
         return None
 
 class Role(str, Enum):
-    Student = "Student"
-    Tutor = "Tutor"
+    Student = "student"
+    Tutor = "tutor"
 
 class RegisterRequest(BaseModel):
     user_id: constr(pattern=r'^\d{8}$')
@@ -148,6 +152,7 @@ async def login(request: RegisterRequest):
         UserPoolId=COGNITO_USER_POOL_ID,
         Username=request.user_id,
         UserAttributes=[
+            {'Name': 'name', 'Value': request.display_name},
             {'Name': 'email', 'Value': email},
             {'Name': 'email_verified', 'Value': 'true'},  # optional but recommended
             {'Name': 'custom:role', 'Value': user.role},  # optional but recommended
