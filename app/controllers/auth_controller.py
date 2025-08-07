@@ -9,6 +9,7 @@ import httpx
 from enum import Enum
 import boto3
 from boto3.dynamodb.conditions import Key
+from botocore.exceptions import ClientError
 
 logger = logging.getLogger(__name__)
 
@@ -161,7 +162,20 @@ async def login(request: RegisterRequest):
         MessageAction='SUPPRESS'  # Optional: suppress sending invitation email
     )
 
+    try:
+        response = cognito_client.admin_add_user_to_group(
+            UserPoolId=COGNITO_USER_POOL_ID,
+            Username=request.user_id,
+            GroupName=user.role
+        )
+        logger.info(f"User {request.user_id} added to group {user.role}")
+
+    except ClientError as e:
+        print(f"Error adding user to group: {e}")
+
     # Replace with your actual primary key and value
     response = table.put_item(
         Item = user.model_dump()
     )
+
+    return {"detail": "User was created."}
