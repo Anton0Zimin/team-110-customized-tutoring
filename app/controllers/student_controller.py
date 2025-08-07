@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, HTTPException, Request
 import logging
 import boto3
@@ -29,7 +30,7 @@ async def create_or_update_student(student: StudentProfile, student_id: str, web
     return {"detail": "Student was created/updated."}
 
 @router.get("/")
-def get_all_students(web_request: Request):
+def get_all_students(web_request: Request, response_model=List[StudentProfile]):
     if web_request.state.user_role == 'student':
         raise HTTPException(status_code=403, detail="This endpoint is for tutors only.")
 

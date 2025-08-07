@@ -7,3 +7,4 @@ python-dotenv==1.1.1
 python-jose==3.5.0
 httpx==0.28.1
 async_lru==2.0.5
+python-multipart==0.0.20
