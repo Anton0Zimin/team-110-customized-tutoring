@@ -18,20 +18,20 @@ CCC AI Summer Camp 2025
 
 ## AWS Services
 
-- AWS Bedrock + Knowledge Base + S3 Vectors + Claude Sonnet 3.5 Foundation Model
-- AWS DynamoDB
+- ![](docs/bedrock.svg) AWS Bedrock + Knowledge Base + S3 Vectors + Claude Sonnet 3.5 Foundation Model
+- ![](docs/dynamodb.svg) AWS DynamoDB
     - Store Users, Students, Tutors
-- AWS S3
+- ![](docs/s3.svg) AWS S3
     - Store source materials for the knowledge base
-- AWS Cognito
+- ![](docs/cognito.svg) AWS Cognito
     - Manage users, group, authentication, authorization
-- AWS ECS (Elastic Container Service)
+- ![](docs/ecs.svg) AWS ECS (Elastic Container Service)
     - Host the backend and frontend app
-- AWS ECR (Elastic Container Registry)
+- ![](docs/ecr.svg) AWS ECR (Elastic Container Registry)
     - Store Docker images
-- AWS ALB (Application Load Balancer)
+- ![](docs/ec2.svg) AWS ALB (Application Load Balancer)
     - Offload HTTPS
-- AWS Route 53 (DNS)
+- ![](docs/route53.svg) AWS Route 53 (DNS)
     - Dynamically update DNS records
 
 ## Tech Stack
