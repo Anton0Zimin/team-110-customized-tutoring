@@ -16,6 +16,10 @@ CCC AI Summer Camp 2025
 - For student:
     - Context from DynamoDB - chat bot for a student.
 
+### Source Documents for RAG
+- Effective Practices for Online Tutoring
+- Tutor Handook
+
 ## AWS Services
 
 - ![](docs/bedrock.svg) AWS Bedrock + Knowledge Base + S3 Vectors + Claude Sonnet 3.5 Foundation Model
