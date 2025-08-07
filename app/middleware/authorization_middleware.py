@@ -1,4 +1,5 @@
 from fastapi import Request, HTTPException
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.status import HTTP_401_UNAUTHORIZED
 import logging
@@ -24,9 +25,9 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
 
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
-            raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
-                detail="Missing or invalid Authorization header",
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Authorization header is missing."},
             )
 
         token = auth_header.removeprefix("Bearer ").strip()
@@ -44,9 +45,9 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
             # TODO: Check routes for student and tutor.
         except Exception as e:
             logger.error("Failed to verify JWT token", exc_info=e)
-            raise HTTPException(
-                status_code=HTTP_401_UNAUTHORIZED,
-                detail="Invalid token",
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Token has expired."},
             )
 
         return await call_next(request)
