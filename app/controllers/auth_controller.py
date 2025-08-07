@@ -8,7 +8,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from services.jwt_service import JwtService
-from models.student_profile import StudentProfile
+from models.student_profile import LearningPreferences, StudentProfile
 from models.tutor_profile import TutorProfile
 from services.student_service import StudentService
 from services.tutor_service import TutorService
@@ -168,7 +168,12 @@ async def login(request: RegisterRequest):
             preferred_subjects=[],
             accommodations_needed=[],
             availability=[],
-            additional_info=""
+            additional_info="",
+            learning_preferences=LearningPreferences(
+                format="",
+                style="",
+                modality=""
+            )
         )
 
         StudentService().add_student(student_profile)
