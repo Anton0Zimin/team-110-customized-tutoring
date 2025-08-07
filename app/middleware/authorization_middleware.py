@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 # 👇 Define your middleware class
 class BearerAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        if not request.url.path.startswith("/api/"):
+            return await call_next(request)
+
         # 👇 Skip middleware logic for OPTIONS requests (CORS preflight)
         if request.method == "OPTIONS":
             return await call_next(request)
@@ -29,7 +32,7 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
         token = auth_header.removeprefix("Bearer ").strip()
 
         try:
-            decoded_token = await JwtService(token)
+            decoded_token = await JwtService().decode_access_token(token)
             request.state.access_token = decoded_token
 
             if "tutor" in decoded_token.get("cognito:groups", []):
