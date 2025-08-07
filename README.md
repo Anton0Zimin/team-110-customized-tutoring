@@ -33,6 +33,8 @@ CCC AI Summer Camp 2025
     - Offload HTTPS
 - ![](docs/route53.svg) AWS Route 53 (DNS)
     - Dynamically update DNS records
+- ![](docs/acm.svg) ACM (Certificate Manager)
+    - Issue HTTPS certificate
 
 ## Tech Stack
 
