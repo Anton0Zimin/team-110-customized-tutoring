@@ -5,8 +5,8 @@ import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
+  title: 'Owl & Lion Access',
+  description: 'CCC AI Summer Camp 2025',
   generator: 'v0.dev',
 }
 
