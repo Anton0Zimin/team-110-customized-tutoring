@@ -10,7 +10,7 @@ import logging
 from fastapi.middleware.cors import CORSMiddleware
 from middleware import BearerAuthMiddleware
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
 app.include_router(auth_controller.router)

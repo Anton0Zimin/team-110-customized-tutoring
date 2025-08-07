@@ -5,6 +5,7 @@ import logging
 from services.student_service import StudentService
 from services.tutor_service import TutorService
 
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -124,9 +125,19 @@ def get_summary_plan(student_id: str):
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
 
-        prompt = build_prompt(
-            student, tutor, class_material
-        )
+        # student = {
+        #     "primary_disability": "Dyslexia",
+        #     "accommodations_needed": ["Text-to-speech software", "Braille materials"],
+        #     "learning_preferences": {
+        #         "style": "Reading/Writing",
+        #         "format": "1-on-1",
+        #         "modality": "Hybrid"
+        #     }
+        # }
+
+
+        prompt = build_prompt(student, tutor, "General Study Plan")
+
 
         os.makedirs("prompts", exist_ok=True)
         save_prompt_to_file(prompt, student_id, "summary_plan4")

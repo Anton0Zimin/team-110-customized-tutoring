@@ -1,5 +1,29 @@
-# team-110-customized-tutoring
-AWS AI Camp 2025 - Customized Tutoring
+# Personalized Tutoring for Disability Services Students
+CCC AI Summer Camp 2025
+
+## Project Objectives
+- Customize tutoring services to better support students with disabilities
+- Address the needs of students in STEM, English, communication, and general education courses
+- Adapt support based on individual learning disabilities, including ADHD and autism
+- Improve educational equity through tailored academic assistance
+- Enhance student engagement and academic performance in high-demand subjects
+- Support disability services staff with effective, scalable tutoring strategies
+
+## AWS Bedrock Use-Cases
+- For tutor:
+    - Knowledge Base + context from DynamoDB - generate a summary study plan for a student.
+    - Knowledge Base + context from DynamoDB - chat bot for a tutor.
+- For student:
+    - Context from DynamoDB - chat bot for a student.
+
+## AWS Services
+
+- AWS Bedrock + Knowledge Base + Claude Sonnet 3.5 Foundation Model
+- AWS DynamoDB
+- AWS S3
+- AWS ECS (Elastic Container Service)
+- AWS ALB (Application Load Balancer)
+- AWS Route 53 (DNS)
 
 ## Restore packages
 
