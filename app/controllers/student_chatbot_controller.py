@@ -48,7 +48,15 @@ def student_chatbot_message(student_id: str, request: ChatbotRequest, web_reques
                 'type': 'KNOWLEDGE_BASE',
                 'knowledgeBaseConfiguration': {
                     'knowledgeBaseId': KNOWLEDGE_BASE_ID,
-                    'modelArn': f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}'
+                    'modelArn': f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}',
+                    'generationConfiguration': {
+                        'promptTemplate': {
+                            'textPromptTemplate': """
+                                Answer the provided question using only the provided documents:
+                                $search_results$
+                            """
+                        }
+                    },
                 }
             }
         )
