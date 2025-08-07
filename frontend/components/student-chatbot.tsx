@@ -13,18 +13,31 @@ interface Message {
   timestamp: Date
 }
 
-export function StudentChatbot() {
+interface StudentChatbotProps {
+  studentId: string;
+  authToken: string;
+}
+
+export function StudentChatbot({ studentId, authToken }: StudentChatbotProps) {
+  const conversationStarters = [
+    "How will I be matched with a tutor?",
+    "What accommodations are available?", 
+    "How do I schedule tutoring sessions?",
+    "What if I need to change my availability?",
+    "How do I contact my tutor?",
+    "What study strategies work best for my learning style?"
+  ];
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hi! I'm here to help answer any questions about your tutoring experience. What would you like to know?",
+      text: "Hi! I'm here to help with your tutoring experience. Here are some things you can ask me about:",
       sender: "bot",
       timestamp: new Date(),
     },
   ])
   const [inputValue, setInputValue] = useState("")
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return
 
     const userMessage: Message = {
@@ -35,40 +48,72 @@ export function StudentChatbot() {
     }
 
     setMessages((prev) => [...prev, userMessage])
+    const currentInput = inputValue;
     setInputValue("")
 
-    // Simulate bot response
-    setTimeout(() => {
-      const botResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        text: generateBotResponse(inputValue),
-        sender: "bot",
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, botResponse])
-    }, 1000)
+    // Show typing indicator
+    const typingMessage: Message = {
+      id: "typing",
+      text: "Typing...",
+      sender: "bot",
+      timestamp: new Date(),
+    }
+    setMessages((prev) => [...prev, typingMessage])
+
+    try {
+      const botResponseText = await generateBotResponse(currentInput);
+      
+      // Remove typing indicator and add real response
+      setMessages((prev) => {
+        const withoutTyping = prev.filter(msg => msg.id !== "typing");
+        const botResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: botResponseText,
+          sender: "bot",
+          timestamp: new Date(),
+        }
+        return [...withoutTyping, botResponse];
+      });
+    } catch (error) {
+      // Remove typing indicator and show error
+      setMessages((prev) => {
+        const withoutTyping = prev.filter(msg => msg.id !== "typing");
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: "I'm having trouble right now. Please contact support at support@fhda.edu.",
+          sender: "bot",
+          timestamp: new Date(),
+        }
+        return [...withoutTyping, errorMessage];
+      });
+    }
   }
 
-  const generateBotResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase()
+  const generateBotResponse = async (userInput: string): Promise<string> => {
+    try {
+      const apiBase = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://customized-training.org';
+      const response = await fetch(`${apiBase}/api/student-chat/${studentId}/chatbot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          message: userInput,
+          subject: "General"
+        })
+      });
 
-    if (input.includes("tutor") || input.includes("match")) {
-      return "Great question! Based on your registration, we'll match you with a tutor who has experience with your specific disability and learning preferences. This usually takes 1-2 business days."
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
+      return data.response;
+    } catch (error) {
+      console.error('Error getting bot response:', error);
+      return "I'm having trouble connecting right now. Please try again or contact support at support@fhda.edu for immediate assistance.";
     }
-
-    if (input.includes("schedule") || input.includes("time")) {
-      return "Your tutor will work with your availability preferences that you provided. You can always update your schedule by contacting us or through your tutor directly."
-    }
-
-    if (input.includes("accommodation")) {
-      return "All our tutors are trained in disability accommodations. Your specific needs have been noted and will be shared with your matched tutor to ensure the best learning experience."
-    }
-
-    if (input.includes("help") || input.includes("support")) {
-      return "I'm here to help! You can also reach out to our support team at support@fhda.edu or visit the Disability Support Services office on campus."
-    }
-
-    return "That's a great question! While I work on getting you a more detailed answer, feel free to contact our support team at support@fhda.edu for immediate assistance."
   }
 
   return (
@@ -99,6 +144,20 @@ export function StudentChatbot() {
               </div>
             )}
           </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2 p-2">
+        {conversationStarters.map((starter, index) => (
+          <button
+            key={index}
+            onClick={() => {
+              setInputValue(starter);
+            }}
+            className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full border text-gray-700 transition-colors"
+          >
+            {starter}
+          </button>
         ))}
       </div>
 

@@ -38,9 +38,8 @@ export function StudyPlan({ student }: StudyPlanProps) {
       try {
         const response = await fetchWithApi(`${API_BASE}/api/chat/${student.student_id}/summary`);
         const json = await response.json();
-        
-        const parsedData = parseStudyPlanResponse(json.summary);
-        setStudyPlanData(parsedData);
+
+        setStudyPlanData(json);
       } catch (error) {
         console.error("Error fetching study plan:", error);
         setStudyPlanData({
@@ -57,74 +56,6 @@ export function StudyPlan({ student }: StudyPlanProps) {
 
     fetchStudyPlan();
   }, [student.student_id]);
-
-  // Parse the LLM response into structured data
-  function parseStudyPlanResponse(response: string): StudyPlanData {
-    const sections = {
-      overview: "",
-      strategies: [] as string[],
-      activities: [] as string[],
-      subjectAdaptations: [] as { subject: string; recommendation: string }[],
-      accommodations: [] as string[]
-    };
-
-    const lines = response.split('\n').filter(line => line.trim());
-    let currentSection = '';
-
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      
-      if (trimmedLine.includes('PERSONALIZED LEARNING OVERVIEW') || trimmedLine.includes('**PERSONALIZED LEARNING OVERVIEW**')) {
-        currentSection = 'overview';
-        continue;
-      } else if (trimmedLine.includes('CORE LEARNING STRATEGIES') || trimmedLine.includes('**CORE LEARNING STRATEGIES**')) {
-        currentSection = 'strategies';
-        continue;
-      } else if (trimmedLine.includes('RECOMMENDED ACTIVITIES') || trimmedLine.includes('**RECOMMENDED ACTIVITIES**')) {
-        currentSection = 'activities';
-        continue;
-      } else if (trimmedLine.includes('SUBJECT-SPECIFIC ADAPTATIONS') || trimmedLine.includes('**SUBJECT-SPECIFIC ADAPTATIONS**')) {
-        currentSection = 'subjectAdaptations';
-        continue;
-      } else if (trimmedLine.includes('ACCOMMODATION IMPLEMENTATION') || trimmedLine.includes('**ACCOMMODATION IMPLEMENTATION**')) {
-        currentSection = 'accommodations';
-        continue;
-      }
-
-      // Skip empty lines and headers
-      if (!trimmedLine || trimmedLine.startsWith('**') || trimmedLine.startsWith('#')) {
-        continue;
-      }
-
-      // Parse content based on current section
-      if (currentSection === 'overview' && trimmedLine) {
-        sections.overview += (sections.overview ? ' ' : '') + trimmedLine;
-      } else if (currentSection === 'strategies' && trimmedLine.startsWith('-')) {
-        sections.strategies.push(trimmedLine.substring(1).trim());
-      } else if (currentSection === 'activities' && trimmedLine.startsWith('-')) {
-        sections.activities.push(trimmedLine.substring(1).trim());
-      } else if (currentSection === 'subjectAdaptations') {
-        if (trimmedLine.startsWith('-')) {
-          sections.accommodations.push(trimmedLine.substring(1).trim());
-        } else if (trimmedLine.includes(':')) {
-          const [subject, recommendation] = trimmedLine.split(':', 2);
-          sections.subjectAdaptations.push({
-            subject: subject.trim(),
-            recommendation: recommendation.trim()
-          });
-        }
-      } else if (currentSection === 'accommodations' && trimmedLine.startsWith('-')) {
-        sections.accommodations.push(trimmedLine.substring(1).trim());
-      }
-    }
-
-    // If parsing fails, extract basic content
-    if (!sections.overview && !sections.strategies.length) {
-      sections.overview = response.length > 500 ? response.substring(0, 500) + "..." : response;
-    }
-
-    return sections;
-  }
 
   return (
     <div className="space-y-4">

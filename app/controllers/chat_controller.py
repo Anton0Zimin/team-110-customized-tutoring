@@ -4,6 +4,7 @@ import os
 import logging
 from services.student_service import StudentService
 from services.tutor_service import TutorService
+from prompts import summary_plan_prompt
 
 KNOWLEDGE_BASE_ID = os.getenv("KNOWLEDGE_BASE_ID")
 
@@ -27,7 +28,7 @@ by Jeff Anderson
 
 Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns).
 
-ORIGINAL: Let’s define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
+ORIGINAL: Let's define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
 
 NEW: Learning is a process in which your mind and body undergo a repeated experience that, overtime, changes your knowledge, beliefs
 
@@ -77,7 +78,7 @@ by Jeff Anderson
 
 Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns).
 
-ORIGINAL: Let’s define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
+ORIGINAL: Let's define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
 
 NEW: Learning is a process in which your mind and body undergo a repeated experience that, overtime, changes your knowledge, beliefs
 
@@ -141,16 +142,17 @@ def get_summary_plan(student_id: str):
                     'modelArn': 'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0',
                     'generationConfiguration': {
                         'promptTemplate': {
-                            'textPromptTemplate': 'Answer the provided question using only the provided documents: $search_results$'
+                            'textPromptTemplate': summary_plan_prompt.kb_prompt
                         }
                     },
                 }
                 
             }
         )
-        os.makedirs("prompts", exist_ok=True)
-        save_prompt_to_file(prompt, student_id, "summary_plan5")
-        return {"response": response['output']['text']}
+        # os.makedirs("prompts", exist_ok=True)
+        # save_prompt_to_file(prompt, student_id, "summary_plan5")
+        # return {"response": response['output']['text']}
+        return json.loads(response['output']['text'])
 
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
