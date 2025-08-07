@@ -9,7 +9,7 @@ from controllers import chat_controller
 import logging
 from fastapi.middleware.cors import CORSMiddleware
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
 app.include_router(auth_controller.router)
