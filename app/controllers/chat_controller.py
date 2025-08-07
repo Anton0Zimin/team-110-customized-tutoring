@@ -4,6 +4,7 @@ import os
 import logging
 from services.student_service import StudentService
 from services.tutor_service import TutorService
+from prompts import summary_plan_prompt
 
 KNOWLEDGE_BASE_ID = os.getenv("KNOWLEDGE_BASE_ID")
 
@@ -141,17 +142,14 @@ def get_summary_plan(student_id: str):
                     'modelArn': 'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0',
                     'generationConfiguration': {
                         'promptTemplate': {
-                            'textPromptTemplate': """
-                                Answer the provided question using only the provided documents:
-                                $search_results$
-                            """
+                            'textPromptTemplate': summary_plan_prompt.kb_prompt
                         }
                     },
                 }
             }
         )
 
-        return {"summary": response['output']['text']}
+        return json.loads(response['output']['text'])
 
     except Exception as e:
         logger.error(f"Error generating summary: {e}")

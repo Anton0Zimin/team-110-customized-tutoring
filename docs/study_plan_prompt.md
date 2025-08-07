@@ -65,7 +65,4 @@ Format your response with clear headers and bullet points for easy reading and i
 
 ## Generation Prompt
 
-```
-Answer the provided question using only the provided documents:
-$search_results$
-```
+[summary_plan_prompt.py](../app/prompts/summary_plan_prompt.py)
