@@ -9,24 +9,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/students", tags=["students"])
 
 @router.get("/{student_id}", response_model=StudentProfile)
-async def get_student(student_id: str):
+async def get_student(student_id: str, web_request: Request):
+    if web_request.state.user_role == 'student' and student_id != web_request.state.user_id:
+        raise HTTPException(status_code=403, detail="Student ID does not match user ID.")
+
     student_service = StudentService()
     return student_service.get_student(student_id)
 
-@router.post("/")
-async def create_student(student: StudentProfile):
-    student_service = StudentService()
-    existing_student = student_service.get_student(student.student_id)
-
-    if existing_student:
-        raise HTTPException(status_code=400, detail="Student already exists")
-
-    student_service.add_student(student)
-    return {"detail": "Student was created."}
-
 @router.put("/{student_id}")
 async def create_or_update_student(student: StudentProfile, student_id: str, web_request: Request):
-    if student.student_id != web_request.state.user_id:
+    if web_request.state.user_role == 'student' and student.student_id != web_request.state.user_id:
         raise HTTPException(status_code=403, detail="Student ID does not match user ID.")
 
     student.student_id = student_id
@@ -37,7 +29,10 @@ async def create_or_update_student(student: StudentProfile, student_id: str, web
     return {"detail": "Student was created/updated."}
 
 @router.get("/")
-def get_all_students():
+def get_all_students(web_request: Request):
+    if web_request.state.user_role == 'student':
+        raise HTTPException(status_code=403, detail="This endpoint is for tutors only.")
+
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('Students')  # replace with your table name
 
