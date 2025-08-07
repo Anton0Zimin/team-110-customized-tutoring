@@ -8,7 +8,7 @@ from controllers import student_controller
 from controllers import chat_controller
 import logging
 from fastapi.middleware.cors import CORSMiddleware
-from lib import BearerAuthMiddleware
+from middleware import BearerAuthMiddleware
 
 logging.basicConfig(level=logging.DEBUG)
 

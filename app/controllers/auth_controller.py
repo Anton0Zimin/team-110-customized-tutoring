@@ -1,17 +1,14 @@
-from uuid import UUID, uuid4
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr, constr
 import logging
-from jose import jwt
-from typing import Optional
 import os
 import httpx
 from enum import Enum
 import boto3
-from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
-from models.student_profile import LearningPreferences, StudentProfile
+from services.jwt_service import JwtService
+from models.student_profile import StudentProfile
 from models.tutor_profile import TutorProfile
 from services.student_service import StudentService
 from services.tutor_service import TutorService
@@ -43,7 +40,7 @@ async def login(request: LoginRequest):
     tokens = await get_jwk_tokens(request)
     logger.debug(tokens)
 
-    jwt_decoded = await verify_jwt_token(tokens)
+    jwt_decoded = await JwtService().decode_id_token(tokens)
     logger.debug(jwt_decoded)
 
     response = LoginResponse(
@@ -94,25 +91,6 @@ async def get_jwk_tokens(request: LoginRequest):
 
     logger.debug(tokens)
     return tokens
-
-async def get_jwk_keys():
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"https://cognito-idp.us-west-2.amazonaws.com/{COGNITO_USER_POOL_ID}/.well-known/jwks.json")
-        return response.json()["keys"]
-
-async def verify_jwt_token(tokens: dict) -> Optional[dict]:
-    try:
-        keys = await get_jwk_keys()
-        logger.debug(keys)
-
-        unverified_header = jwt.get_unverified_header(tokens["id_token"])
-        key = next(k for k in keys if k["kid"] == unverified_header["kid"])
-        return jwt.decode(tokens["id_token"], key, algorithms=["RS256"],
-                          audience=COGNITO_CLIENT_ID,
-                          access_token=tokens["access_token"])
-    except Exception as e:
-        logger.error("Failed to verify JWT token", exc_info=e)
-        return None
 
 class Role(str, Enum):
     Student = "student"
