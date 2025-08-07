@@ -170,6 +170,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
   async function getToken(code: string) {
     try {
+      if (!redirectUri) {
+        return;
+      }
+
       const response = await fetch(API_BASE + "/api/auth/login", {
         method: "POST",
         headers: {
@@ -229,6 +233,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     const currentLoginUrl = `https://us-west-2ttuysti65.auth.us-west-2.amazoncognito.com/login?client_id=5duv42nb7jfvuq0kuctin87irc&response_type=code&scope=email+openid+profile&redirect_uri=${encodedRedirectUri}`;
     setLoginUrl(currentLoginUrl);
 
+    setIsInitialized(true);
+  }, []); // Empty dependency array = run only once
+
+  useEffect(() => {
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
     const accessToken = getAccessToken();
@@ -240,9 +248,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       console.log("code: " + code + ", getAccessToken: " + accessToken);
       getToken(code);
     }
-    
-    setIsInitialized(true);
-  }, []); // Empty dependency array = run only once
+  }, [redirectUri]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
