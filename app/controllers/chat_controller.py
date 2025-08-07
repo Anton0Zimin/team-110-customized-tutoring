@@ -149,9 +149,6 @@ def get_summary_plan(student_id: str):
                 
             }
         )
-        # os.makedirs("prompts", exist_ok=True)
-        # save_prompt_to_file(prompt, student_id, "summary_plan5")
-        # return {"response": response['output']['text']}
         return json.loads(response['output']['text'])
 
     except Exception as e:
@@ -211,8 +208,6 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
         result = {"response": response['output']['text']}
         logger.info(f"Returning response length: {len(result['response'])}")
 
-        os.makedirs("prompts", exist_ok=True)
-        save_prompt_to_file(prompt, student_id, "chat_prompt")
         return result
 
     except Exception as e:
@@ -224,9 +219,6 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
 
 import boto3
 import json
-
-# Initialize Bedrock client
-# bedrock = boto3.client("bedrock-runtime", region_name="us-west-2")
 bedrock = boto3.client("bedrock-agent-runtime", region_name="us-west-2")
 
 
@@ -324,16 +316,6 @@ Answer the tutor's question with practical, actionable advice.
 """
 
     return prompt
-
-def save_prompt_to_file(prompt, student_id, prompt_type):
-    os.makedirs("prompts", exist_ok=True)
-    filename = f"prompts/{student_id}_{prompt_type}.txt"
-
-    with open(filename, "w") as f:
-        f.write(prompt)
-
-    logger.info(f"Prompt saved to {filename}")
-
 
 # Example student and tutor (replace with real data later)
 student = {
