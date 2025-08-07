@@ -123,7 +123,7 @@ async def register(request: RegisterRequest):
     item = response.get('Item')
 
     if item:
-        raise HTTPException(status_code=400, detail="User already exists")
+        raise HTTPException(status_code=400, detail="User already exists.")
 
     email = request.user_id + '@customized-training.org'
     user = UserProfile(user_id=request.user_id,
@@ -133,16 +133,20 @@ async def register(request: RegisterRequest):
 
     cognito_client = boto3.client('cognito-idp')
 
-    response = cognito_client.admin_create_user(
-        UserPoolId=COGNITO_USER_POOL_ID,
-        Username=request.user_id,
-        UserAttributes=[
-            {'Name': 'name', 'Value': request.display_name},
-            {'Name': 'email', 'Value': request.email},
-            {'Name': 'email_verified', 'Value': 'true'},  # optional but recommended
-            {'Name': 'custom:role', 'Value': user.role},  # optional but recommended
-        ]
-    )
+    try:
+        response = cognito_client.admin_create_user(
+            UserPoolId=COGNITO_USER_POOL_ID,
+            Username=request.user_id,
+            UserAttributes=[
+                {'Name': 'name', 'Value': request.display_name},
+                {'Name': 'email', 'Value': request.email},
+                {'Name': 'email_verified', 'Value': 'true'},  # optional but recommended
+                {'Name': 'custom:role', 'Value': user.role},  # optional but recommended
+            ]
+        )
+    except cognito_client.exceptions.UsernameExistsException:
+        raise HTTPException(status_code=400, detail="User already exists.")
+
 
     try:
         response = cognito_client.admin_add_user_to_group(

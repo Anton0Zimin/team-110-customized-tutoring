@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 import logging
 import boto3
 from models import StudentProfile
@@ -25,7 +25,12 @@ async def create_student(student: StudentProfile):
     return {"detail": "Student was created."}
 
 @router.put("/{student_id}")
-async def create_or_update_student(student: StudentProfile, student_id: str):
+async def create_or_update_student(student: StudentProfile, student_id: str, web_request: Request):
+    if student.student_id != web_request.state.user_id:
+        raise HTTPException(status_code=403, detail="Student ID does not match user ID.")
+
+    student.student_id = student_id
+
     student_service = StudentService()
 
     student_service.add_student(student)
