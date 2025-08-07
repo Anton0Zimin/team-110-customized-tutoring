@@ -145,62 +145,79 @@ def get_summary_plan(student_id: str):
                         }
                     },
                 }
+                
             }
         )
-
+        os.makedirs("prompts", exist_ok=True)
+        save_prompt_to_file(prompt, student_id, "summary_plan5")
         return {"response": response['output']['text']}
 
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate summary")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error details: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate summary: {str(e)}")
 
 @router.post("/{student_id}/chat")
 def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Request):
     try:
-        # Get real data from DynamoDB
+        logger.info(f"Chat request for student_id: {student_id}")
+        logger.info(f"KNOWLEDGE_BASE_ID: {KNOWLEDGE_BASE_ID}")
+        
+        # Get student data from DynamoDB
         student = student_service.get_student(student_id)
+        logger.info(f"Student found: {student is not None}")
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
 
-        tutor = tutor_service.get_tutor(web_request.state.user_id)
-        if not tutor:
-            raise HTTPException(status_code=404, detail="Tutor not found: " + web_request.state.user_id)
+        # Get tutor data if tutor_id is provided
+        tutor = None
+        if request.tutor_id:
+            tutor = tutor_service.get_tutor(request.tutor_id)
+            logger.info(f"Tutor found: {tutor is not None}")
 
-        # Build context-aware prompt
-        context_prompt = f"""
-{build_prompt(student, tutor, request.subject, request.class_material)}
+        # Build chat-specific prompt for tutor assistance
+        prompt = build_tutor_chat_prompt(
+            student, 
+            tutor, 
+            request.message, 
+            request.subject, 
+            request.class_material if request.class_material else None
+        )
+        logger.info(f"Generated prompt length: {len(prompt)}")
 
-Student question: {request.message}
-
-Provide a helpful, accessible response.
-"""
-
+        logger.info("Calling Bedrock...")
         response = bedrock.retrieve_and_generate(
             input={
-                'text': (
-                    "You are a helpful assistant. "
-                    "Always respond in clear, concise sentences. "
-                    "When you use information from the knowledge base, cite it at the end.\n\n"
-                    f"User question: {context_prompt}"
-                )
+                'text': prompt
             },
             retrieveAndGenerateConfiguration={
                 'type': 'KNOWLEDGE_BASE',
                 'knowledgeBaseConfiguration': {
                     'knowledgeBaseId': KNOWLEDGE_BASE_ID,
-                    'modelArn': f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}'
+                    'modelArn': 'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0',
+                    'generationConfiguration': {
+                        'promptTemplate': {
+                            'textPromptTemplate': 'Answer the provided question using the provided documents and context: $search_results$'
+                        }
+                    },
                 }
             }
-            # modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
-            # messages=[{"role": "user", "content": [{"text": context_prompt}]}],
-            # inferenceConfig={"temperature": 0.5, "maxTokens": 750}
         )
+        logger.info("Bedrock response received")
 
-        return {"response": response['output']['message']['content'][0]['text']}
+        result = {"response": response['output']['text']}
+        logger.info(f"Returning response length: {len(result['response'])}")
+
+        os.makedirs("prompts", exist_ok=True)
+        save_prompt_to_file(prompt, student_id, "chat_prompt")
+        return result
 
     except Exception as e:
         logger.error(f"Error generating chat response: {e}")
-        raise HTTPException(status_code=500, detail="Failed to generate response")
+        logger.error(f"Error type: {type(e).__name__}")
+        logger.error(f"Error details: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate chat response: {str(e)}")
 
 
 import boto3
@@ -259,6 +276,53 @@ Respond in this format:
 
     return prompt
 
+def build_tutor_chat_prompt(student, tutor, message, subject, class_material=None):
+    prompt = f"""
+You are an expert tutoring assistant helping a tutor better understand how to support a student with disabilities.
+
+The tutor has asked: "{message}"
+
+Provide specific, actionable guidance based on the student's profile and learning needs. Focus on practical tutoring strategies, accommodations, and teaching approaches.
+
+<Student Profile>
+- Disability: {student["primary_disability"]}
+- Learning Style: {student["learning_preferences"]["style"]}
+- Modality: {student["learning_preferences"]["modality"]}
+- Format: {student["learning_preferences"]["format"]}
+- Accommodations: {', '.join(student["accommodations_needed"])}
+- Subject: {subject}
+"""
+
+    if tutor:
+        prompt += f"""
+
+<Tutor Profile>
+- Style: {tutor["tutoring_style"]}
+- Subjects: {', '.join(tutor["subjects"])}
+- Tools: {', '.join(tutor["tools_or_technologies"])}
+- Accessibility Skills: {', '.join(tutor["accommodation_skills"])}
+"""
+
+    if class_material:
+        prompt += f"""
+
+<Class Material Context>
+{class_material}
+"""
+
+    prompt += """
+
+Provide specific recommendations on:
+1. Teaching strategies that align with the student's disability and learning preferences
+2. How to implement the required accommodations effectively
+3. Tools or techniques that would be most helpful
+4. Potential challenges to anticipate and how to address them
+
+Answer the tutor's question with practical, actionable advice.
+"""
+
+    return prompt
+
 def save_prompt_to_file(prompt, student_id, prompt_type):
     os.makedirs("prompts", exist_ok=True)
     filename = f"prompts/{student_id}_{prompt_type}.txt"
@@ -288,5 +352,4 @@ tutor = {
 }
 
 subject = "Introduction to Essay Writing"
-
 
