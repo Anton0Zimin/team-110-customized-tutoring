@@ -66,5 +66,6 @@ Format your response with clear headers and bullet points for easy reading and i
 ## Generation Prompt
 
 ```
-Answer the provided question using only the provided documents: $search_results$
+Answer the provided question using only the provided documents:
+$search_results$
 ```
