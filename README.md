@@ -33,6 +33,13 @@ uvicorn main:app --reload
 ## Push to Docker
 
 ```sh
+cd frontend
+npm ci
+npm run build
+cd ..
+```
+
+```sh
 aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 819351093526.dkr.ecr.us-west-2.amazonaws.com
 
 docker build -t team-110/customized-tutoring .

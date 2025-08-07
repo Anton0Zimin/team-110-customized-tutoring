@@ -1,14 +1,17 @@
-from uuid import UUID, uuid4
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel, EmailStr, constr
 import logging
-from jose import jwt
-from typing import Optional
 import os
 import httpx
 from enum import Enum
 import boto3
-from boto3.dynamodb.conditions import Key
+from botocore.exceptions import ClientError
+
+from services.jwt_service import JwtService
+from models.student_profile import LearningPreferences, StudentProfile
+from models.tutor_profile import TutorProfile
+from services.student_service import StudentService
+from services.tutor_service import TutorService
 
 logger = logging.getLogger(__name__)
 
@@ -18,35 +21,39 @@ COGNITO_DOMAIN = os.getenv("COGNITO_DOMAIN")
 COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
 COGNITO_CLIENT_ID = os.getenv("COGNITO_CLIENT_ID")
 COGNITO_CLIENT_SECRET = os.getenv("COGNITO_CLIENT_SECRET")
-COGNITO_REDIRECT_URI = os.getenv("COGNITO_REDIRECT_URI")
 
 class LoginRequest(BaseModel):
     code: str
+    redirect_uri: str # http://localhost:3000
 
 class LoginResponse(BaseModel):
+    user_id: str
+    role: str
     email: str
     name: str
     access_token: str
 
-@router.post("/login/")
+@router.post("/login")
 async def login(request: LoginRequest):
     logger.debug(request)
 
-    tokens = await get_jwk_tokens(request.code)
+    tokens = await get_jwk_tokens(request)
     logger.debug(tokens)
 
-    jwt_decoded = await verify_jwt_token(tokens)
+    jwt_decoded = await JwtService().decode_id_token(tokens)
     logger.debug(jwt_decoded)
 
     response = LoginResponse(
+        user_id=jwt_decoded["cognito:username"],
         email=jwt_decoded["email"],
         name=jwt_decoded["name"],
+        role=jwt_decoded["custom:role"],
         access_token=tokens["access_token"]
     )
 
     return response
 
-async def get_jwk_tokens(code: str):
+async def get_jwk_tokens(request: LoginRequest):
     # Prepare headers and data
     headers = {
         "Content-Type": "application/x-www-form-urlencoded"
@@ -54,8 +61,8 @@ async def get_jwk_tokens(code: str):
     data = {
         "grant_type": "authorization_code",
         "client_id": COGNITO_CLIENT_ID,
-        "code": code,
-        "redirect_uri": COGNITO_REDIRECT_URI
+        "code": request.code,
+        "redirect_uri": request.redirect_uri
     }
 
     # If using client secret, add Basic Auth header
@@ -63,7 +70,6 @@ async def get_jwk_tokens(code: str):
 
     logger.debug(data)
 
-    # response = requests.post(f"{COGNITO_REDIRECT_URI}/oauth2/token", headers=headers, data=data, auth=auth)
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{COGNITO_DOMAIN}/oauth2/token",
@@ -86,75 +92,118 @@ async def get_jwk_tokens(code: str):
     logger.debug(tokens)
     return tokens
 
-async def get_jwk_keys():
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"https://cognito-idp.us-west-2.amazonaws.com/{COGNITO_USER_POOL_ID}/.well-known/jwks.json")
-        return response.json()["keys"]
-
-async def verify_jwt_token(tokens: dict) -> Optional[dict]:
-    try:
-        keys = await get_jwk_keys()
-        logger.debug(keys)
-
-        unverified_header = jwt.get_unverified_header(tokens["id_token"])
-        key = next(k for k in keys if k["kid"] == unverified_header["kid"])
-        return jwt.decode(tokens["id_token"], key, algorithms=["RS256"],
-                          audience=COGNITO_CLIENT_ID,
-                          access_token=tokens["access_token"])
-    except Exception as e:
-        logger.error("Failed to verify JWT token", exc_info=e)
-        return None
-
 class Role(str, Enum):
-    Student = "Student"
-    Tutor = "Tutor"
+    Student = "student"
+    Tutor = "tutor"
 
 class RegisterRequest(BaseModel):
-    email: str
+    user_id: constr(pattern=r'^\d{8}$')
     display_name: str
     role: Role
+    email: EmailStr
 
 class UserProfile(BaseModel):
-    user_id: str
-    email: str
+    user_id: constr(pattern=r'^\d{8}$')
     display_name: str
     role: Role
 
-@router.post("/register/")
-async def login(request: RegisterRequest):
+@router.post("/register")
+async def register(request: RegisterRequest):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('Users')
 
-    response = table.query(
-        IndexName='email-index',  # your GSI name
-        KeyConditionExpression=Key('email').eq(request.email)
+    # Replace with your actual primary key and value
+    response = table.get_item(
+        Key={
+            'user_id': request.user_id
+        }
     )
 
-    items = response.get('Items', [])
-    if items:
-        raise HTTPException(status_code=400, detail="User already exists")
+    # Check if the item exists
+    item = response.get('Item')
 
-    user = UserProfile(user_id=str(uuid4()),
-                       email=request.email,
+    if item:
+        raise HTTPException(status_code=400, detail="User already exists.")
+
+    email = request.user_id + '@customized-training.org'
+    user = UserProfile(user_id=request.user_id,
+                       email="email",
                        display_name=request.display_name,
                        role=request.role)
 
-
     cognito_client = boto3.client('cognito-idp')
 
-    response = cognito_client.admin_create_user(
-        UserPoolId=COGNITO_USER_POOL_ID,
-        Username=user.email,
-        UserAttributes=[
-            {'Name': 'email', 'Value': user.email},
-            {'Name': 'email_verified', 'Value': 'true'},  # optional but recommended
-            {'Name': 'custom:role', 'Value': user.role},  # optional but recommended
-        ],
-        TemporaryPassword='TempPass123!',  # User must change this at first login
-        MessageAction='SUPPRESS'  # Optional: suppress sending invitation email
-    )
+    try:
+        response = cognito_client.admin_create_user(
+            UserPoolId=COGNITO_USER_POOL_ID,
+            Username=request.user_id,
+            UserAttributes=[
+                {'Name': 'name', 'Value': request.display_name},
+                {'Name': 'email', 'Value': request.email},
+                {'Name': 'email_verified', 'Value': 'true'},  # optional but recommended
+                {'Name': 'custom:role', 'Value': user.role},  # optional but recommended
+            ]
+        )
+    except cognito_client.exceptions.UsernameExistsException:
+        raise HTTPException(status_code=400, detail="User already exists.")
+
+
+    try:
+        response = cognito_client.admin_add_user_to_group(
+            UserPoolId=COGNITO_USER_POOL_ID,
+            Username=request.user_id,
+            GroupName=user.role
+        )
+        logger.info(f"User {request.user_id} added to group {user.role}")
+
+    except ClientError as e:
+        print(f"Error adding user to group: {e}")
 
     # Replace with your actual primary key and value
     response = table.put_item(
         Item = user.model_dump()
     )
+
+    if request.role == Role.Student:
+        student_profile = StudentProfile(
+            student_id=request.user_id,
+            display_name=request.display_name,
+            primary_disability="None",
+            preferred_subjects=[],
+            accommodations_needed=[],
+            availability=[],
+            additional_info="",
+            learning_preferences=LearningPreferences(
+                format="",
+                style="",
+                modality=""
+            )
+        )
+
+        StudentService().add_student(student_profile)
+    else:
+        tutor_profile = TutorProfile(
+            tutor_id=request.user_id,
+            display_name=request.display_name,
+            tutoring_style="",
+            subjects=[],
+            tools_or_technologies=[],
+            accommodation_skills=[],
+            additional_info="")
+
+        TutorService().add_tutor(tutor_profile)
+
+    return {"detail": "User was created."}
+
+class CheckTokenExpirationResponse(BaseModel):
+    user_id: str
+    role: str
+
+@router.get("/me")
+async def check_token_expiration(web_request: Request, response_model=CheckTokenExpirationResponse):
+    response = CheckTokenExpirationResponse(
+        user_id=web_request.state.user_id,
+        role=web_request.state.user_role,
+    )
+
+    return response

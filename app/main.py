@@ -8,6 +8,7 @@ from controllers import student_controller
 from controllers import chat_controller
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+from middleware import BearerAuthMiddleware
 
 logging.basicConfig(level=logging.INFO)
 
@@ -22,6 +23,7 @@ app.mount("/", StaticFiles(directory="static", html=True), name="static")
 # Define your allowed origins (e.g., frontend on localhost)
 origins = [
     "http://localhost:8000",  # React, Vite, etc.
+    "http://localhost:3000",
     "http://customized-training.org"
 ]
 
@@ -33,3 +35,5 @@ app.add_middleware(
     allow_methods=["*"],              # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],              # Allow all headers
 )
+
+app.add_middleware(BearerAuthMiddleware)
