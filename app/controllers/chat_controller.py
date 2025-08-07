@@ -147,13 +147,48 @@ def get_summary_plan(student_id: str):
 
         save_prompt_to_file(prompt, student_id, "summary_plan")
 
-        response = bedrock.converse(
-            modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
-            messages=[{"role": "user", "content": [{"text": prompt}]}],
-            inferenceConfig={"temperature": 0.5, "maxTokens": 750}
+        # response = bedrock.converse(
+        #     modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
+        #     messages=[{"role": "user", "content": [{"text": prompt}]}],
+        #     inferenceConfig={"temperature": 0.5, "maxTokens": 750}
+        # )
+        # return {"summary": response['output']['message']['content'][0]['text']}
+        # response = bedrock.retrieve_and_generate(
+        #     input={
+        #         'text': prompt
+        #     },
+        #     retrieveAndGenerateConfiguration={
+        #         'type': 'KNOWLEDGE_BASE',
+        #         'knowledgeBaseConfiguration': {
+        #             'knowledgeBaseId': 'YOUR_KNOWLEDGE_BASE_ID',
+        #             'modelArn': 'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0'
+        #         }
+        #     }
+        # )
+
+        response = bedrock.retrieve_and_generate(
+            input={
+                'text': prompt
+            },
+            retrieveAndGenerateConfiguration={
+                'type': 'KNOWLEDGE_BASE',
+                'knowledgeBaseConfiguration': {
+                    'knowledgeBaseId': KNOWLEDGE_BASE_ID,
+                    'modelArn': 'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0',
+                    'generationConfiguration': {
+                        'promptTemplate': {
+                            'textPromptTemplate': 'Generate answer based on search results; $search_results$ '
+                            }
+                        },
+                }
+            }
         )
 
-        return {"summary": response['output']['message']['content'][0]['text']}
+
+        return {"response": response['output']['text']}
+
+
+
 
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
@@ -212,80 +247,54 @@ import boto3
 import json
 
 # Initialize Bedrock client
-bedrock = boto3.client("bedrock-runtime", region_name="us-west-2")
+# bedrock = boto3.client("bedrock-runtime", region_name="us-west-2")
+bedrock = boto3.client("bedrock-agent-runtime", region_name="us-west-2")
+
 
 # Your base prompt — we'll improve this in the next steps
-def build_prompt(student, tutor, subject="General", class_material=None):
+def build_prompt(student, tutor, subject, class_material=None):
     prompt = f"""
-You are an expert AI tutor assistant creating a comprehensive, personalized study plan.
+You are an expert tutor assistant who specialized in providing personalized, accessible tutoring for students with disabilities.
 
-Your task is to generate a structured tutoring plan that helps the student effectively learn the subject content, using instructional strategies aligned with their specific learning needs and preferences.
+Your task is to generate a personalized tutoring plan that helps the student effectively learn the subject content, using instructional strategies aligned with their specific learning needs and preferences.
 
 Do not reference or repeat any personally identifiable information. Focus only on customizing the approach to meet the student's accessibility requirements.
 
 <Student Profile>
-- Primary Disability: {student["primary_disability"]}
+- Disability: {student["primary_disability"]}
 - Learning Style: {student["learning_preferences"]["style"]}
-- Learning Modality: {student["learning_preferences"]["modality"]}
-- Preferred Format: {student["learning_preferences"]["format"]}
-- Required Accommodations: {', '.join(student["accommodations_needed"])}
-- Preferred Subjects: {', '.join(student.get("preferred_subjects", ["General"]))}
-</Student Profile>"""
+- Modality: {student["learning_preferences"]["modality"]}
+- Format: {student["learning_preferences"]["format"]}
+- Accommodations: {', '.join(student["accommodations_needed"])}
+
+Subject: {subject}
+"""
 
     if tutor:
         prompt += f"""
 
-<Tutor Profile>
-- Tutoring Style: {tutor["tutoring_style"]}
-- Subject Expertise: {', '.join(tutor["subjects"])}
-- Available Tools: {', '.join(tutor["tools_or_technologies"])}
-- Accommodation Skills: {', '.join(tutor["accommodation_skills"])}
-</Tutor Profile>"""
-
-    prompt += f"""
+Tutor Profile:
+- Style: {tutor["tutoring_style"]}
+- Subjects: {', '.join(tutor["subjects"])}
+- Tools: {', '.join(tutor["tools_or_technologies"])}
+- Accessibility Skills: {', '.join(tutor["accommodation_skills"])}
+- Required Accommodations: {', '.join(student["accommodations_needed"])}
+</Student Profile>
 
 <Study Context>
-- Primary Subject Focus: {subject}"""
+- Subject: {subject}
+"""
 
     if class_material:
         prompt += f"""
-- Current Class Material/Assignment:
-{class_material}"""
+- Class Material or Assignment:
+{class_material}
 
-    prompt += f"""
-</Study Context>
 
-Generate a comprehensive, well-structured study plan formatted as follows:
+Provide personalized, accessible tutoring that considers the student's specific needs.
 
-**PERSONALIZED LEARNING OVERVIEW**
-Provide a 2-3 sentence summary of the customized learning approach for this student's {student["primary_disability"]} with {student["learning_preferences"]["style"]} learning style in a {student["learning_preferences"]["format"]} format.
-
-**CORE LEARNING STRATEGIES**
-List 4-5 specific, actionable teaching strategies that align with the student's disability and learning preferences. Each strategy should be:
-- Tailored to {student["primary_disability"]}
-- Compatible with {student["learning_preferences"]["style"]} learning style
-- Practical for implementation
-
-**RECOMMENDED ACTIVITIES**
-List 4-5 specific learning activities that:
-- Support the identified learning strategies
-- Are accessible given the required accommodations
-- Can be adapted for {student["learning_preferences"]["format"]} sessions
-- Engage the student's preferred learning modality
-
-**SUBJECT-SPECIFIC ADAPTATIONS**
-For each of the student's preferred subjects, provide specific recommendations that:
-- Address how {student["primary_disability"]} may impact learning in that subject
-- Suggest concrete adaptations and modifications
-- Include accessibility considerations
-
-**ACCOMMODATION IMPLEMENTATION**
-Explain how to effectively implement the required accommodations: {', '.join(student["accommodations_needed"])}
-- Provide practical guidance for each accommodation
-- Connect accommodations to learning activities
-- Include any necessary technology or tools
-
-Format your response with clear headers and bullet points for easy reading and implementation. Focus on actionable, evidence-based strategies that directly address the student's needs and preferences.
+Respond in this format:
+<>
 """
 
     return prompt
