@@ -12,9 +12,42 @@ logger = logging.getLogger(__name__)
 # 👇 Define your middleware class
 class BearerAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        # Skip auth for testing - set default values
-        request.state.user_id = '50000001'
-        request.state.user_role = "tutor"
-        
-        # Skip auth check for now
+        if not request.url.path.startswith("/api/"):
+            return await call_next(request)
+
+        # 👇 Skip middleware logic for OPTIONS requests (CORS preflight)
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
+        # Exclude specific paths from authentication
+        if request.url.path in ["/api/auth/login", "/api/auth/register"]:
+            return await call_next(request)
+
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Authorization header is missing."},
+            )
+
+        token = auth_header.removeprefix("Bearer ").strip()
+
+        try:
+            decoded_token = await JwtService().decode_access_token(token)
+            request.state.access_token = decoded_token
+            request.state.user_id = decoded_token["username"]
+
+            if "tutor" in decoded_token.get("cognito:groups", []):
+                request.state.user_role = "tutor"
+            else:
+                request.state.user_role = "student"
+
+            # TODO: Check routes for student and tutor.
+        except Exception as e:
+            logger.error("Failed to verify JWT token", exc_info=e)
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Token has expired."},
+            )
+
         return await call_next(request)
