@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Student } from "@/app/page"
 import { Upload, X } from "lucide-react"
+import { fetchWithApi } from "@/lib/fetchWithToken"
+import { getUserId } from "@/lib/globals"
+import { API_BASE } from "@/lib/constants"
 
 interface StudentRegistrationFormProps {
   onSubmit: (student: Student) => void
@@ -66,7 +69,7 @@ export function StudentRegistrationForm({ onSubmit }: StudentRegistrationFormPro
     additional_info: "",
   })
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
-  
+
   // Validation state for FHDA ID
   const isFhdaIdValid = formData.student_id && formData.student_id.length === 8 && /^\d{8}$/.test(formData.student_id)
 
@@ -119,13 +122,13 @@ export function StudentRegistrationForm({ onSubmit }: StudentRegistrationFormPro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Validate FHDA ID is exactly 8 digits
     if (!formData.student_id || formData.student_id.length !== 8 || !/^\d{8}$/.test(formData.student_id)) {
       alert('Please enter a valid 8-digit FHDA ID')
       return
     }
-    
+
     if (formData.primary_disability && formData.learning_preferences?.style) {
       onSubmit({
         ...formData,
@@ -133,6 +136,17 @@ export function StudentRegistrationForm({ onSubmit }: StudentRegistrationFormPro
       } as Student)
     }
   }
+
+  async function fetchStudentInfo() {
+    const studentId = getUserId();
+    const response = await fetchWithApi(`${API_BASE}/api/students/${studentId}`);
+    const json = await response.json();
+    setFormData(json);
+  }
+
+  useEffect(() => {
+    fetchStudentInfo();
+  }, []);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -160,10 +174,10 @@ export function StudentRegistrationForm({ onSubmit }: StudentRegistrationFormPro
               required
             />
             <p className={`text-sm font-serif mt-1 ${isFhdaIdValid ? 'text-green-600' : formData.student_id ? 'text-red-600' : 'text-gray-500'}`}>
-              {isFhdaIdValid 
-                ? '✓ Valid FHDA ID' 
-                : formData.student_id 
-                  ? 'Please enter exactly 8 digits' 
+              {isFhdaIdValid
+                ? '✓ Valid FHDA ID'
+                : formData.student_id
+                  ? 'Please enter exactly 8 digits'
                   : 'Your FHDA ID is an 8-digit number assigned by the college'
               }
             </p>
@@ -433,8 +447,8 @@ export function StudentRegistrationForm({ onSubmit }: StudentRegistrationFormPro
           </Button>
         </div>
         <p className="text-sm text-gray-600 font-serif text-center">
-          By submitting this form, I consent to the collection and use of my personal data, including disability-related information and learning preferences, 
-          for the sole purpose of matching me with appropriate tutoring services and creating personalized study plans. 
+          By submitting this form, I consent to the collection and use of my personal data, including disability-related information and learning preferences,
+          for the sole purpose of matching me with appropriate tutoring services and creating personalized study plans.
           This data will be shared only with assigned tutors and authorized college staff.
         </p>
       </div>

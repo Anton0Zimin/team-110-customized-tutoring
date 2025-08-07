@@ -9,6 +9,7 @@ import type { UserRole } from "@/app/page"
 import { useEffect, useState } from "react"
 import { API_BASE } from "@/lib/constants"
 import { fetchWithApi, getAccessToken, setAccessToken } from "@/lib/fetchWithToken"
+import { setUserId } from "@/lib/globals"
 
 interface LoginScreenProps {
   onLogin: (role: UserRole) => void
@@ -186,7 +187,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
       if (response.ok) {
         console.log("JWT:", json);
-        setAccessToken(json.access_token)
+        setAccessToken(json.access_token);
+        setUserId(json.user_id);
 
         onLogin(json.role);
       }
@@ -206,6 +208,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
       if (response.ok) {
         const json = await response.json();
+        setUserId(json.user_id);
         onLogin(json.role);
       }
       else {
