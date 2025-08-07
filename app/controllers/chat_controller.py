@@ -128,43 +128,7 @@ def get_summary_plan(student_id: str):
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
 
-        # student = {
-        #     "primary_disability": "Dyslexia",
-        #     "accommodations_needed": ["Text-to-speech software", "Braille materials"],
-        #     "learning_preferences": {
-        #         "style": "Reading/Writing",
-        #         "format": "1-on-1",
-        #         "modality": "Hybrid"
-        #     }
-        # }
-
-
         prompt = build_prompt(student, tutor, "General Study Plan")
-
-
-        os.makedirs("prompts", exist_ok=True)
-        save_prompt_to_file(prompt, student_id, "summary_plan4")
-
-        save_prompt_to_file(prompt, student_id, "summary_plan")
-
-        # response = bedrock.converse(
-        #     modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
-        #     messages=[{"role": "user", "content": [{"text": prompt}]}],
-        #     inferenceConfig={"temperature": 0.5, "maxTokens": 750}
-        # )
-        # return {"summary": response['output']['message']['content'][0]['text']}
-        # response = bedrock.retrieve_and_generate(
-        #     input={
-        #         'text': prompt
-        #     },
-        #     retrieveAndGenerateConfiguration={
-        #         'type': 'KNOWLEDGE_BASE',
-        #         'knowledgeBaseConfiguration': {
-        #             'knowledgeBaseId': 'YOUR_KNOWLEDGE_BASE_ID',
-        #             'modelArn': 'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0'
-        #         }
-        #     }
-        # )
 
         response = bedrock.retrieve_and_generate(
             input={
@@ -177,18 +141,14 @@ def get_summary_plan(student_id: str):
                     'modelArn': 'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0',
                     'generationConfiguration': {
                         'promptTemplate': {
-                            'textPromptTemplate': 'Generate answer based on search results; $search_results$ '
-                            }
-                        },
+                            'textPromptTemplate': 'Answer the provided question using only the provided documents: $search_results$'
+                        }
+                    },
                 }
             }
         )
 
-
         return {"response": response['output']['text']}
-
-
-
 
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
@@ -230,7 +190,7 @@ Provide a helpful, accessible response.
                     'knowledgeBaseId': KNOWLEDGE_BASE_ID,
                     'modelArn': f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}'
                 }
-            }        
+            }
             # modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
             # messages=[{"role": "user", "content": [{"text": context_prompt}]}],
             # inferenceConfig={"temperature": 0.5, "maxTokens": 750}
