@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from enum import Enum
 
@@ -27,6 +27,7 @@ class LearningPreferences(BaseModel):
 
 class StudentProfile(BaseModel):
     student_id: str
+    email: Optional[EmailStr] = None
     display_name: str
     primary_disability: str
     preferred_subjects: List[str]
