@@ -2,12 +2,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { Student } from "@/app/page"
 import { BookOpen, Clock, Target, Lightbulb } from "lucide-react"
+import { useEffect, useState } from "react"
+import { fetchWithApi } from "@/lib/fetchWithToken"
+import { API_BASE } from "@/lib/constants"
 
 interface StudyPlanProps {
   student: Student
 }
 
 export function StudyPlan({ student }: StudyPlanProps) {
+  const [studyPlan, setStudyPlan] = useState<string>("⌛ Loading...");
+
   // Generate AI study plan based on student data
   const generateStudyPlan = () => {
     const plans = {
@@ -55,6 +60,20 @@ export function StudyPlan({ student }: StudyPlanProps) {
       },
     }
 
+    async function fetchPlanSummary() {
+      if (!student.student_id) {
+        return;
+      }
+
+      const response = await fetchWithApi(`${API_BASE}/api/chat/${student.student_id}/summary`);
+      const json = await response.json();
+      setStudyPlan(json.summary);
+    }
+
+    useEffect(() => {
+      fetchPlanSummary();
+    }, [student]);
+
     return (
       plans[student.primary_disability as keyof typeof plans] || {
         strategies: [
@@ -86,6 +105,7 @@ export function StudyPlan({ student }: StudyPlanProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <p>{studyPlan}</p>
           <p className="font-serif text-blue-700 text-sm">
             This plan is tailored for {student.primary_disability} with{" "}
             {student.learning_preferences?.style.toLowerCase()}
