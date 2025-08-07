@@ -92,7 +92,7 @@ export function StudentChatbot({ studentId, authToken }: StudentChatbotProps) {
   const generateBotResponse = async (userInput: string): Promise<string> => {
     try {
       const apiBase = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://customized-training.org';
-      const response = await fetch(`${apiBase}/api/chat/${studentId}/chatbot`, {
+      const response = await fetch(`${apiBase}/api/student-chat/${studentId}/chatbot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

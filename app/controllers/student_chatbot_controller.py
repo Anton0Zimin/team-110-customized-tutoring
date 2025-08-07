@@ -11,7 +11,7 @@ KNOWLEDGE_BASE_ID = os.getenv("KNOWLEDGE_BASE_ID")
 logger = logging.getLogger(__name__)
 
 # Create separate router for student chatbot
-router = APIRouter(prefix="/api/chat", tags=["student-chatbot"])
+router = APIRouter(prefix="/api/student-chat", tags=["student-chatbot"])
 student_service = StudentService()
 
 # Initialize Bedrock client
