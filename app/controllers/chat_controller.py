@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import os
 import logging
@@ -31,33 +31,31 @@ def get_summary_plan(student_id: str):
 
         os.makedirs("prompts", exist_ok=True)
         save_prompt_to_file(prompt, student_id, "summary_plan")
-        
+
         response = bedrock.converse(
             modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
             messages=[{"role": "user", "content": [{"text": prompt}]}],
             inferenceConfig={"temperature": 0.5, "maxTokens": 750}
         )
-        
+
         return {"summary": response['output']['message']['content'][0]['text']}
-        
+
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate summary")
 
 @router.post("/{student_id}/chat")
-def get_next_chat_message(student_id: str, request: ChatRequest):
+def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Request):
     try:
         # Get real data from DynamoDB
         student = student_service.get_student(student_id)
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
-        
-        tutor = None
-        if request.tutor_id:
-            tutor = tutor_service.get_tutor(request.tutor_id)
-            if not tutor:
-                raise HTTPException(status_code=404, detail="Tutor not found")
-        
+
+        tutor = tutor_service.get_tutor(web_request.state.tutor_id)
+        if not tutor:
+            raise HTTPException(status_code=404, detail="Tutor not found: " + web_request.state.tutor_id)
+
         # Build context-aware prompt
         context_prompt = f"""
 {build_prompt(student, tutor, request.subject, request.class_material)}
@@ -66,15 +64,15 @@ Student question: {request.message}
 
 Provide a helpful, accessible response.
 """
-        
+
         response = bedrock.converse(
             modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
             messages=[{"role": "user", "content": [{"text": context_prompt}]}],
             inferenceConfig={"temperature": 0.5, "maxTokens": 750}
         )
-        
+
         return {"response": response['output']['message']['content'][0]['text']}
-        
+
     except Exception as e:
         logger.error(f"Error generating chat response: {e}")
         raise HTTPException(status_code=500, detail="Failed to generate response")
@@ -100,7 +98,7 @@ Student Profile:
 
 Subject: {subject}
 """
-    
+
     if tutor:
         prompt += f"""
 
@@ -110,28 +108,28 @@ Tutor Profile:
 - Tools: {', '.join(tutor["tools_or_technologies"])}
 - Accessibility Skills: {', '.join(tutor["accommodation_skills"])}
 """
-    
+
     if class_material:
         prompt += f"""
 
 Class Material/Assignment:
 {class_material}
 """
-    
+
     prompt += """
 
 Provide personalized, accessible tutoring that considers the student's specific needs.
 """
-    
+
     return prompt
 
 def save_prompt_to_file(prompt, student_id, prompt_type):
     os.makedirs("prompts", exist_ok=True)
     filename = f"prompts/{student_id}_{prompt_type}.txt"
-    
+
     with open(filename, "w") as f:
         f.write(prompt)
-    
+
     logger.info(f"Prompt saved to {filename}")
 
 
