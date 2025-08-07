@@ -27,7 +27,7 @@ by Jeff Anderson
 
 Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns).
 
-ORIGINAL: Let’s define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
+ORIGINAL: Let's define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
 
 NEW: Learning is a process in which your mind and body undergo a repeated experience that, overtime, changes your knowledge, beliefs
 
@@ -77,7 +77,7 @@ by Jeff Anderson
 
 Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns).
 
-ORIGINAL: Let’s define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
+ORIGINAL: Let's define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
 
 NEW: Learning is a process in which your mind and body undergo a repeated experience that, overtime, changes your knowledge, beliefs
 
@@ -128,43 +128,7 @@ def get_summary_plan(student_id: str):
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
 
-        # student = {
-        #     "primary_disability": "Dyslexia",
-        #     "accommodations_needed": ["Text-to-speech software", "Braille materials"],
-        #     "learning_preferences": {
-        #         "style": "Reading/Writing",
-        #         "format": "1-on-1",
-        #         "modality": "Hybrid"
-        #     }
-        # }
-
-
         prompt = build_prompt(student, tutor, "General Study Plan")
-
-
-        os.makedirs("prompts", exist_ok=True)
-        save_prompt_to_file(prompt, student_id, "summary_plan4")
-
-        save_prompt_to_file(prompt, student_id, "summary_plan")
-
-        # response = bedrock.converse(
-        #     modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
-        #     messages=[{"role": "user", "content": [{"text": prompt}]}],
-        #     inferenceConfig={"temperature": 0.5, "maxTokens": 750}
-        # )
-        # return {"summary": response['output']['message']['content'][0]['text']}
-        # response = bedrock.retrieve_and_generate(
-        #     input={
-        #         'text': prompt
-        #     },
-        #     retrieveAndGenerateConfiguration={
-        #         'type': 'KNOWLEDGE_BASE',
-        #         'knowledgeBaseConfiguration': {
-        #             'knowledgeBaseId': 'YOUR_KNOWLEDGE_BASE_ID',
-        #             'modelArn': 'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0'
-        #         }
-        #     }
-        # )
 
         response = bedrock.retrieve_and_generate(
             input={
@@ -177,18 +141,17 @@ def get_summary_plan(student_id: str):
                     'modelArn': 'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0',
                     'generationConfiguration': {
                         'promptTemplate': {
-                            'textPromptTemplate': 'Generate answer based on search results; $search_results$ '
-                            }
-                        },
+                            'textPromptTemplate': """
+                                Answer the provided question using only the provided documents:
+                                $search_results$
+                            """
+                        }
+                    },
                 }
             }
         )
 
-
-        return {"response": response['output']['text']}
-
-
-
+        return {"summary": response['output']['text']}
 
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
@@ -230,7 +193,7 @@ Provide a helpful, accessible response.
                     'knowledgeBaseId': KNOWLEDGE_BASE_ID,
                     'modelArn': f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}'
                 }
-            }        
+            }
             # modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
             # messages=[{"role": "user", "content": [{"text": context_prompt}]}],
             # inferenceConfig={"temperature": 0.5, "maxTokens": 750}
@@ -328,5 +291,3 @@ tutor = {
 }
 
 subject = "Introduction to Essay Writing"
-
-

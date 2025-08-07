@@ -8,6 +8,8 @@ import { StudentChatbot } from "@/components/student-chatbot"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import type { Student } from "@/app/page"
 import { LogOut } from "lucide-react"
+import { getUserId } from "@/lib/globals"
+import { getAccessToken } from "@/lib/fetchWithToken"
 
 interface StudentViewProps {
   onRegistration: (student: Student) => void
@@ -79,7 +81,10 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <StudentChatbot />
+                  <StudentChatbot 
+                    studentId={getUserId() || ""} 
+                    authToken={getAccessToken() || ""} 
+                  />
                 </CardContent>
               </Card>
             )}

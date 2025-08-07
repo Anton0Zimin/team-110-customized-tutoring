@@ -39,7 +39,7 @@ export function StudyPlan({ student }: StudyPlanProps) {
         const response = await fetchWithApi(`${API_BASE}/api/chat/${student.student_id}/summary`);
         const json = await response.json();
         
-        const parsedData = parseStudyPlanResponse(json.summary);
+        const parsedData = parseStudyPlanResponse(json.summary || json.response);
         setStudyPlanData(parsedData);
       } catch (error) {
         console.error("Error fetching study plan:", error);
