@@ -5,6 +5,9 @@ import logging
 from services.student_service import StudentService
 from services.tutor_service import TutorService
 
+KNOWLEDGE_BASE_ID = os.getenv("KNOWLEDGE_BASE_ID")
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -177,10 +180,25 @@ Student question: {request.message}
 Provide a helpful, accessible response.
 """
 
-        response = bedrock.converse(
-            modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
-            messages=[{"role": "user", "content": [{"text": context_prompt}]}],
-            inferenceConfig={"temperature": 0.5, "maxTokens": 750}
+        response = bedrock.retrieve_and_generate(
+            input={
+                'text': (
+                    "You are a helpful assistant. "
+                    "Always respond in clear, concise sentences. "
+                    "When you use information from the knowledge base, cite it at the end.\n\n"
+                    f"User question: {context_prompt}"
+                )
+            },
+            retrieveAndGenerateConfiguration={
+                'type': 'KNOWLEDGE_BASE',
+                'knowledgeBaseConfiguration': {
+                    'knowledgeBaseId': KNOWLEDGE_BASE_ID,
+                    'modelArn': f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}'
+                }
+            }        
+            # modelId="anthropic.claude-3-5-sonnet-20241022-v2:0",
+            # messages=[{"role": "user", "content": [{"text": context_prompt}]}],
+            # inferenceConfig={"temperature": 0.5, "maxTokens": 750}
         )
 
         return {"response": response['output']['message']['content'][0]['text']}
