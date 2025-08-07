@@ -122,7 +122,7 @@ How is your learning connected to your motivation? If you think about when you a
 
 
 @router.get("/{student_id}/summary")
-def get_summary_plan(student_id: str):
+def get_summary_plan(student_id: str, web_request: Request):
     try:
         # Get real data from DynamoDB
         student = student_service.get_student(student_id)
@@ -146,8 +146,8 @@ def get_summary_plan(student_id: str):
                         }
                     },
                 }
-                
-            }
+            },
+            sessionId=f"tutor/summary/{web_request.state.user_id}/{student_id}"
         )
         # os.makedirs("prompts", exist_ok=True)
         # save_prompt_to_file(prompt, student_id, "summary_plan5")
@@ -165,7 +165,7 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
     try:
         logger.info(f"Chat request for student_id: {student_id}")
         logger.info(f"KNOWLEDGE_BASE_ID: {KNOWLEDGE_BASE_ID}")
-        
+
         # Get student data from DynamoDB
         student = student_service.get_student(student_id)
         logger.info(f"Student found: {student is not None}")
@@ -180,10 +180,10 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
 
         # Build chat-specific prompt for tutor assistance
         prompt = build_tutor_chat_prompt(
-            student, 
-            tutor, 
-            request.message, 
-            request.subject, 
+            student,
+            tutor,
+            request.message,
+            request.subject,
             request.class_material if request.class_material else None
         )
         logger.info(f"Generated prompt length: {len(prompt)}")
@@ -204,7 +204,8 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
                         }
                     },
                 }
-            }
+            },
+            sessionId=f"tutor/chat/{web_request.state.user_id}/{student_id}"
         )
         logger.info("Bedrock response received")
 
