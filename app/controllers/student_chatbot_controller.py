@@ -30,7 +30,7 @@ def student_chatbot_message(student_id: str, request: ChatbotRequest, web_reques
         # Verify the requesting user is the same student
         if web_request.state.user_role != "student" or web_request.state.user_id != student_id:
             raise HTTPException(status_code=403, detail="Access denied")
-
+        
         # Get student data
         student = student_service.get_student(student_id)
         if not student:
@@ -58,8 +58,7 @@ def student_chatbot_message(student_id: str, request: ChatbotRequest, web_reques
                         }
                     },
                 }
-            },
-            sessionId=f"student/{student_id}"
+            }
         )
 
         return {"response": response['output']['text']}
