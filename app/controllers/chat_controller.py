@@ -15,7 +15,106 @@ class ChatRequest(BaseModel):
     message: str
     subject: str = "General"
     tutor_id: str = None
-    class_material: str = None
+    class_material: str = """
+
+What is Deep Learning
+by Jeff Anderson
+
+
+Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns). 
+
+ORIGINAL: Let’s define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
+
+NEW: Learning is a process in which your mind and body undergo a repeated experience that, overtime, changes your knowledge, beliefs
+
+
+
+
+Rewrite the definition of deep learning in your own words. Be sure to identify the different components of deep learning. Put focused energy into developing your ideas of what deep learning is, what it feels like, and how you know when you are engaged in deep learning. My hope is that you can use this work to spend more time in deep learning in every class and to start to identify when your teachers implement policies that are harmful to deep learning.  
+
+
+
+
+Describe what it feels like when you engage in deep learning. What type of subjects and topics do you already do learn deeply about? When are you most excited about engaging in deep learning?
+
+
+
+
+Rewrite the definition of shallow learning in your own words. Be sure to identify the different components of deep learning. Do your best to figure out what shallow learning means to you, what it feels like, and how you know when you are engaged in shallow learning. If you can identify when your teachers implement policies that are force you to learn in shallow ways, then you can develop strategies to counter-act these policies so that you can maximize the amount of time you spend learning deeply.  
+
+
+
+
+Describe what it feels like when you learn in a shallow way. When do you tend to engage in shallow learning? What factors in your life and what type of classroom policies tend to make you focus on shallow learning rather than deep learning?
+
+
+
+
+
+
+How is your learning connected to your motivation? If you think about when you are engaged in deep learning versus shallow learning, how much of this has to do with the level and types of motivation you bring into your learning? As you respond, think about the differences extrinsic motivation and intrinsic motivation. 
+
+
+
+
+
+
+
+
+
+
+"""
+
+class_material = """
+
+What is Deep Learning
+by Jeff Anderson
+
+
+Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns). 
+
+ORIGINAL: Let’s define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
+
+NEW: Learning is a process in which your mind and body undergo a repeated experience that, overtime, changes your knowledge, beliefs
+
+
+
+
+Rewrite the definition of deep learning in your own words. Be sure to identify the different components of deep learning. Put focused energy into developing your ideas of what deep learning is, what it feels like, and how you know when you are engaged in deep learning. My hope is that you can use this work to spend more time in deep learning in every class and to start to identify when your teachers implement policies that are harmful to deep learning.  
+
+
+
+
+Describe what it feels like when you engage in deep learning. What type of subjects and topics do you already do learn deeply about? When are you most excited about engaging in deep learning?
+
+
+
+
+Rewrite the definition of shallow learning in your own words. Be sure to identify the different components of deep learning. Do your best to figure out what shallow learning means to you, what it feels like, and how you know when you are engaged in shallow learning. If you can identify when your teachers implement policies that are force you to learn in shallow ways, then you can develop strategies to counter-act these policies so that you can maximize the amount of time you spend learning deeply.  
+
+
+
+
+Describe what it feels like when you learn in a shallow way. When do you tend to engage in shallow learning? What factors in your life and what type of classroom policies tend to make you focus on shallow learning rather than deep learning?
+
+
+
+
+
+
+How is your learning connected to your motivation? If you think about when you are engaged in deep learning versus shallow learning, how much of this has to do with the level and types of motivation you bring into your learning? As you respond, think about the differences extrinsic motivation and intrinsic motivation. 
+
+
+
+
+
+
+
+
+
+
+"""
+
 
 @router.get("/{student_id}/summary")
 def get_summary_plan(student_id: str):
@@ -26,10 +125,12 @@ def get_summary_plan(student_id: str):
             raise HTTPException(status_code=404, detail="Student not found")
 
         prompt = build_prompt(
-            student, tutor, "General Study sPlan"
+            student, tutor, class_material
         )
 
         os.makedirs("prompts", exist_ok=True)
+        save_prompt_to_file(prompt, student_id, "summary_plan4")
+        
         save_prompt_to_file(prompt, student_id, "summary_plan")
 
         response = bedrock.converse(
@@ -87,9 +188,13 @@ bedrock = boto3.client("bedrock-runtime", region_name="us-west-2")
 # Your base prompt — we'll improve this in the next steps
 def build_prompt(student, tutor, subject, class_material=None):
     prompt = f"""
-You are an expert tutor assistant.
+You are an expert AI tutor assistant. 
 
-Student Profile:
+Your task is to generate a personalized tutoring plan that helps the student effectively learn the subject content, using instructional strategies aligned with their specific learning needs and preferences.
+
+Do not reference or repeat any personally identifiable information. Focus only on customizing the approach to meet the student's accessibility requirements.
+
+<Student Profile>
 - Disability: {student["primary_disability"]}
 - Learning Style: {student["learning_preferences"]["style"]}
 - Modality: {student["learning_preferences"]["modality"]}
@@ -107,18 +212,29 @@ Tutor Profile:
 - Subjects: {', '.join(tutor["subjects"])}
 - Tools: {', '.join(tutor["tools_or_technologies"])}
 - Accessibility Skills: {', '.join(tutor["accommodation_skills"])}
+- Required Accommodations: {', '.join(student["accommodations_needed"])}
+</Student Profile>
+
+<Study Context>
+- Subject: {subject}
 """
 
     if class_material:
         prompt += f"""
-
-Class Material/Assignment:
+- Class Material or Assignment:
 {class_material}
 """
 
     prompt += """
+</Study Context>
 
-Provide personalized, accessible tutoring that considers the student's specific needs.
+Output a detailed, structured tutoring plan that:
+- Uses teaching methods appropriate to the student's learning style.
+- Is accessible and aligns with their accommodations.
+- Supports comprehension and retention of the subject material.
+- Is formatted clearly for the tutor to follow and implement.
+
+Do not include explanations of your reasoning—just return the plan.
 """
 
     return prompt
@@ -152,7 +268,5 @@ tutor = {
 }
 
 subject = "Introduction to Essay Writing"
-
-
 
 
