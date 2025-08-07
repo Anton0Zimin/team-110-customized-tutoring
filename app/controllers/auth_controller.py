@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, EmailStr, constr
 import logging
 from jose import jwt
 from typing import Optional
@@ -10,6 +10,11 @@ from enum import Enum
 import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
+
+from models.student_profile import LearningPreferences, StudentProfile
+from models.tutor_profile import TutorProfile
+from services.student_service import StudentService
+from services.tutor_service import TutorService
 
 logger = logging.getLogger(__name__)
 
@@ -117,6 +122,7 @@ class RegisterRequest(BaseModel):
     user_id: constr(pattern=r'^\d{8}$')
     display_name: str
     role: Role
+    email: EmailStr
 
 class UserProfile(BaseModel):
     user_id: constr(pattern=r'^\d{8}$')
@@ -154,12 +160,10 @@ async def login(request: RegisterRequest):
         Username=request.user_id,
         UserAttributes=[
             {'Name': 'name', 'Value': request.display_name},
-            {'Name': 'email', 'Value': email},
+            {'Name': 'email', 'Value': request.email},
             {'Name': 'email_verified', 'Value': 'true'},  # optional but recommended
             {'Name': 'custom:role', 'Value': user.role},  # optional but recommended
-        ],
-        TemporaryPassword='TempPass123!',  # User must change this at first login
-        MessageAction='SUPPRESS'  # Optional: suppress sending invitation email
+        ]
     )
 
     try:
@@ -177,5 +181,29 @@ async def login(request: RegisterRequest):
     response = table.put_item(
         Item = user.model_dump()
     )
+
+    if request.role == Role.Student:
+        student_profile = StudentProfile(
+            student_id=request.user_id,
+            display_name=request.display_name,
+            primary_disability="None",
+            preferred_subjects=[],
+            accommodations_needed=[],
+            availability=[],
+            additional_info=""
+        )
+
+        StudentService().add_student(student_profile)
+    else:
+        tutor_profile = TutorProfile(
+            tutor_id=request.user_id,
+            display_name=request.display_name,
+            tutoring_style="",
+            subjects=[],
+            tools_or_technologies=[],
+            accommodation_skills=[],
+            additional_info="")
+
+        TutorService().add_tutor(tutor_profile)
 
     return {"detail": "User was created."}

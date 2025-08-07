@@ -32,5 +32,5 @@ class StudentProfile(BaseModel):
     preferred_subjects: List[str]
     accommodations_needed: List[str]
     availability: List[AvailabilityItem]
-    learning_preferences: LearningPreferences
+    learning_preferences: Optional[LearningPreferences] = None
     additional_info: Optional[str] = ""
