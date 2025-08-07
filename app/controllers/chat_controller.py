@@ -215,49 +215,77 @@ import json
 bedrock = boto3.client("bedrock-runtime", region_name="us-west-2")
 
 # Your base prompt — we'll improve this in the next steps
-def build_prompt(student, tutor, subject, class_material=None):
+def build_prompt(student, tutor, subject="General", class_material=None):
     prompt = f"""
-You are an expert tutor assistant who specialized in providing personalized, accessible tutoring for students with disabilities.
+You are an expert AI tutor assistant creating a comprehensive, personalized study plan.
 
-Your task is to generate a personalized tutoring plan that helps the student effectively learn the subject content, using instructional strategies aligned with their specific learning needs and preferences.
+Your task is to generate a structured tutoring plan that helps the student effectively learn the subject content, using instructional strategies aligned with their specific learning needs and preferences.
 
 Do not reference or repeat any personally identifiable information. Focus only on customizing the approach to meet the student's accessibility requirements.
 
 <Student Profile>
-- Disability: {student["primary_disability"]}
+- Primary Disability: {student["primary_disability"]}
 - Learning Style: {student["learning_preferences"]["style"]}
-- Modality: {student["learning_preferences"]["modality"]}
-- Format: {student["learning_preferences"]["format"]}
-- Accommodations: {', '.join(student["accommodations_needed"])}
-
-Subject: {subject}
-"""
+- Learning Modality: {student["learning_preferences"]["modality"]}
+- Preferred Format: {student["learning_preferences"]["format"]}
+- Required Accommodations: {', '.join(student["accommodations_needed"])}
+- Preferred Subjects: {', '.join(student.get("preferred_subjects", ["General"]))}
+</Student Profile>"""
 
     if tutor:
         prompt += f"""
 
-Tutor Profile:
-- Style: {tutor["tutoring_style"]}
-- Subjects: {', '.join(tutor["subjects"])}
-- Tools: {', '.join(tutor["tools_or_technologies"])}
-- Accessibility Skills: {', '.join(tutor["accommodation_skills"])}
-- Required Accommodations: {', '.join(student["accommodations_needed"])}
-</Student Profile>
+<Tutor Profile>
+- Tutoring Style: {tutor["tutoring_style"]}
+- Subject Expertise: {', '.join(tutor["subjects"])}
+- Available Tools: {', '.join(tutor["tools_or_technologies"])}
+- Accommodation Skills: {', '.join(tutor["accommodation_skills"])}
+</Tutor Profile>"""
+
+    prompt += f"""
 
 <Study Context>
-- Subject: {subject}
-"""
+- Primary Subject Focus: {subject}"""
 
     if class_material:
         prompt += f"""
-- Class Material or Assignment:
-{class_material}
+- Current Class Material/Assignment:
+{class_material}"""
 
+    prompt += f"""
+</Study Context>
 
-Provide personalized, accessible tutoring that considers the student's specific needs.
+Generate a comprehensive, well-structured study plan formatted as follows:
 
-Respond in this format:
-<>
+**PERSONALIZED LEARNING OVERVIEW**
+Provide a 2-3 sentence summary of the customized learning approach for this student's {student["primary_disability"]} with {student["learning_preferences"]["style"]} learning style in a {student["learning_preferences"]["format"]} format.
+
+**CORE LEARNING STRATEGIES**
+List 4-5 specific, actionable teaching strategies that align with the student's disability and learning preferences. Each strategy should be:
+- Tailored to {student["primary_disability"]}
+- Compatible with {student["learning_preferences"]["style"]} learning style
+- Practical for implementation
+
+**RECOMMENDED ACTIVITIES**
+List 4-5 specific learning activities that:
+- Support the identified learning strategies
+- Are accessible given the required accommodations
+- Can be adapted for {student["learning_preferences"]["format"]} sessions
+- Engage the student's preferred learning modality
+
+**SUBJECT-SPECIFIC ADAPTATIONS**
+For each of the student's preferred subjects, provide specific recommendations that:
+- Address how {student["primary_disability"]} may impact learning in that subject
+- Suggest concrete adaptations and modifications
+- Include accessibility considerations
+
+**ACCOMMODATION IMPLEMENTATION**
+Explain how to effectively implement the required accommodations: {', '.join(student["accommodations_needed"])}
+- Provide practical guidance for each accommodation
+- Connect accommodations to learning activities
+- Include any necessary technology or tools
+
+Format your response with clear headers and bullet points for easy reading and implementation. Focus on actionable, evidence-based strategies that directly address the student's needs and preferences.
 """
 
     return prompt
