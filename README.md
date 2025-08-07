@@ -63,7 +63,7 @@ pip install -r requirements.txt
 
 ## Run the backend app
 
-Create .env based on .env.template.
+Create app/.env based on app/.env.template.
 
 ```sh
 cd app
