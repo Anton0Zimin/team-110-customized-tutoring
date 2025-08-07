@@ -18,12 +18,31 @@ CCC AI Summer Camp 2025
 
 ## AWS Services
 
-- AWS Bedrock + Knowledge Base + Claude Sonnet 3.5 Foundation Model
-- AWS DynamoDB
-- AWS S3
-- AWS ECS (Elastic Container Service)
-- AWS ALB (Application Load Balancer)
-- AWS Route 53 (DNS)
+- ![](docs/bedrock.svg) AWS Bedrock + Knowledge Base + S3 Vectors + Claude Sonnet 3.5 Foundation Model
+- ![](docs/dynamodb.svg) AWS DynamoDB
+    - Store Users, Students, Tutors
+- ![](docs/s3.svg) AWS S3
+    - Store source materials for the knowledge base
+- ![](docs/cognito.svg) AWS Cognito
+    - Manage users, group, authentication, authorization
+- ![](docs/ecs.svg) AWS ECS (Elastic Container Service)
+    - Host the backend and frontend app
+- ![](docs/ecr.svg) AWS ECR (Elastic Container Registry)
+    - Store Docker images
+- ![](docs/ec2.svg) AWS ALB (Application Load Balancer)
+    - Offload HTTPS
+- ![](docs/route53.svg) AWS Route 53 (DNS)
+    - Dynamically update DNS records
+- ![](docs/acm.svg) ACM (Certificate Manager)
+    - Issue HTTPS certificate
+
+## Tech Stack
+
+- Backend
+    - FastAPI (Python)
+- Frontend
+    - Next.js (React, TypeScript)
+- Docker
 
 ## Restore packages
 
@@ -39,12 +58,12 @@ OR
 
 ```sh
 cd app
-pip install -r app/requirements.txt
+pip install -r requirements.txt
 ```
 
-## Run the app
+## Run the backend app
 
-Create .env based on .env.template.
+Create app/.env based on app/.env.template.
 
 ```sh
 cd app
@@ -54,7 +73,15 @@ uvicorn main:app --reload
 - [Local App](http://localhost:8000)
 - [API Docs](http://localhost:8000/docs)
 
-## Push to Docker
+## Run the frontend
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+## Build Docker image and push to ECR
 
 ```sh
 cd frontend

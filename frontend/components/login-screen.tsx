@@ -450,10 +450,10 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
               </p>
               <div className="space-y-2">
                 <Button
-                  onClick={() => window.location.href = 'tel:+16509492346'}
+                  onClick={() => window.location.href = 'tel:+15096209481'}
                   className="w-full h-12 font-serif bg-[#8B1538] dark:bg-primary hover:bg-[#8B1538]/90 dark:hover:bg-primary/90 text-white"
                 >
-                  Call for Assistance: (415) xxx-xxxx
+                  Call for Assistance: (509) 620-9481
                 </Button>
                 <p className="text-xs text-muted-foreground font-serif">
                   Our accessibility support team can help you register and navigate the platform

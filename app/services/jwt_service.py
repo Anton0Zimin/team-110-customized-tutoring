@@ -1,6 +1,7 @@
 import os
 from typing import Optional
-from async_lru import alru_cache
+from asyncache import cached
+from cachetools import TTLCache
 import httpx
 from jose import jwt
 import logging
@@ -10,8 +11,10 @@ logger = logging.getLogger(__name__)
 COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
 COGNITO_CLIENT_ID = os.getenv("COGNITO_CLIENT_ID")
 
+cache = TTLCache(maxsize=100, ttl=300) # 5 minutes TTL
+
 class JwtService:
-    @alru_cache
+    @cached(cache)
     async def _get_jwk_keys(self):
         async with httpx.AsyncClient() as client:
             response = await client.get(f"https://cognito-idp.us-west-2.amazonaws.com/{COGNITO_USER_POOL_ID}/.well-known/jwks.json")
