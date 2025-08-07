@@ -18,10 +18,10 @@ COGNITO_DOMAIN = os.getenv("COGNITO_DOMAIN")
 COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
 COGNITO_CLIENT_ID = os.getenv("COGNITO_CLIENT_ID")
 COGNITO_CLIENT_SECRET = os.getenv("COGNITO_CLIENT_SECRET")
-COGNITO_REDIRECT_URI = os.getenv("COGNITO_REDIRECT_URI")
 
 class LoginRequest(BaseModel):
     code: str
+    redirect_uri: str # http://localhost:3000
 
 class LoginResponse(BaseModel):
     email: str
@@ -32,7 +32,7 @@ class LoginResponse(BaseModel):
 async def login(request: LoginRequest):
     logger.debug(request)
 
-    tokens = await get_jwk_tokens(request.code)
+    tokens = await get_jwk_tokens(request)
     logger.debug(tokens)
 
     jwt_decoded = await verify_jwt_token(tokens)
@@ -46,7 +46,7 @@ async def login(request: LoginRequest):
 
     return response
 
-async def get_jwk_tokens(code: str):
+async def get_jwk_tokens(request: LoginRequest):
     # Prepare headers and data
     headers = {
         "Content-Type": "application/x-www-form-urlencoded"
@@ -54,8 +54,8 @@ async def get_jwk_tokens(code: str):
     data = {
         "grant_type": "authorization_code",
         "client_id": COGNITO_CLIENT_ID,
-        "code": code,
-        "redirect_uri": COGNITO_REDIRECT_URI
+        "code": request.code,
+        "redirect_uri": request.redirect_uri
     }
 
     # If using client secret, add Basic Auth header
@@ -63,7 +63,6 @@ async def get_jwk_tokens(code: str):
 
     logger.debug(data)
 
-    # response = requests.post(f"{COGNITO_REDIRECT_URI}/oauth2/token", headers=headers, data=data, auth=auth)
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{COGNITO_DOMAIN}/oauth2/token",
