@@ -21,7 +21,7 @@ What is Deep Learning
 by Jeff Anderson
 
 
-Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns). 
+Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns).
 
 ORIGINAL: Let’s define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
 
@@ -30,7 +30,7 @@ NEW: Learning is a process in which your mind and body undergo a repeated experi
 
 
 
-Rewrite the definition of deep learning in your own words. Be sure to identify the different components of deep learning. Put focused energy into developing your ideas of what deep learning is, what it feels like, and how you know when you are engaged in deep learning. My hope is that you can use this work to spend more time in deep learning in every class and to start to identify when your teachers implement policies that are harmful to deep learning.  
+Rewrite the definition of deep learning in your own words. Be sure to identify the different components of deep learning. Put focused energy into developing your ideas of what deep learning is, what it feels like, and how you know when you are engaged in deep learning. My hope is that you can use this work to spend more time in deep learning in every class and to start to identify when your teachers implement policies that are harmful to deep learning.
 
 
 
@@ -40,7 +40,7 @@ Describe what it feels like when you engage in deep learning. What type of subje
 
 
 
-Rewrite the definition of shallow learning in your own words. Be sure to identify the different components of deep learning. Do your best to figure out what shallow learning means to you, what it feels like, and how you know when you are engaged in shallow learning. If you can identify when your teachers implement policies that are force you to learn in shallow ways, then you can develop strategies to counter-act these policies so that you can maximize the amount of time you spend learning deeply.  
+Rewrite the definition of shallow learning in your own words. Be sure to identify the different components of deep learning. Do your best to figure out what shallow learning means to you, what it feels like, and how you know when you are engaged in shallow learning. If you can identify when your teachers implement policies that are force you to learn in shallow ways, then you can develop strategies to counter-act these policies so that you can maximize the amount of time you spend learning deeply.
 
 
 
@@ -52,7 +52,7 @@ Describe what it feels like when you learn in a shallow way. When do you tend to
 
 
 
-How is your learning connected to your motivation? If you think about when you are engaged in deep learning versus shallow learning, how much of this has to do with the level and types of motivation you bring into your learning? As you respond, think about the differences extrinsic motivation and intrinsic motivation. 
+How is your learning connected to your motivation? If you think about when you are engaged in deep learning versus shallow learning, how much of this has to do with the level and types of motivation you bring into your learning? As you respond, think about the differences extrinsic motivation and intrinsic motivation.
 
 
 
@@ -71,7 +71,7 @@ What is Deep Learning
 by Jeff Anderson
 
 
-Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns). 
+Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns).
 
 ORIGINAL: Let’s define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
 
@@ -80,7 +80,7 @@ NEW: Learning is a process in which your mind and body undergo a repeated experi
 
 
 
-Rewrite the definition of deep learning in your own words. Be sure to identify the different components of deep learning. Put focused energy into developing your ideas of what deep learning is, what it feels like, and how you know when you are engaged in deep learning. My hope is that you can use this work to spend more time in deep learning in every class and to start to identify when your teachers implement policies that are harmful to deep learning.  
+Rewrite the definition of deep learning in your own words. Be sure to identify the different components of deep learning. Put focused energy into developing your ideas of what deep learning is, what it feels like, and how you know when you are engaged in deep learning. My hope is that you can use this work to spend more time in deep learning in every class and to start to identify when your teachers implement policies that are harmful to deep learning.
 
 
 
@@ -90,7 +90,7 @@ Describe what it feels like when you engage in deep learning. What type of subje
 
 
 
-Rewrite the definition of shallow learning in your own words. Be sure to identify the different components of deep learning. Do your best to figure out what shallow learning means to you, what it feels like, and how you know when you are engaged in shallow learning. If you can identify when your teachers implement policies that are force you to learn in shallow ways, then you can develop strategies to counter-act these policies so that you can maximize the amount of time you spend learning deeply.  
+Rewrite the definition of shallow learning in your own words. Be sure to identify the different components of deep learning. Do your best to figure out what shallow learning means to you, what it feels like, and how you know when you are engaged in shallow learning. If you can identify when your teachers implement policies that are force you to learn in shallow ways, then you can develop strategies to counter-act these policies so that you can maximize the amount of time you spend learning deeply.
 
 
 
@@ -102,7 +102,7 @@ Describe what it feels like when you learn in a shallow way. When do you tend to
 
 
 
-How is your learning connected to your motivation? If you think about when you are engaged in deep learning versus shallow learning, how much of this has to do with the level and types of motivation you bring into your learning? As you respond, think about the differences extrinsic motivation and intrinsic motivation. 
+How is your learning connected to your motivation? If you think about when you are engaged in deep learning versus shallow learning, how much of this has to do with the level and types of motivation you bring into your learning? As you respond, think about the differences extrinsic motivation and intrinsic motivation.
 
 
 
@@ -130,7 +130,7 @@ def get_summary_plan(student_id: str):
 
         os.makedirs("prompts", exist_ok=True)
         save_prompt_to_file(prompt, student_id, "summary_plan4")
-        
+
         save_prompt_to_file(prompt, student_id, "summary_plan")
 
         response = bedrock.converse(
@@ -153,9 +153,9 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
 
-        tutor = tutor_service.get_tutor(web_request.state.tutor_id)
+        tutor = tutor_service.get_tutor(web_request.state.user_id)
         if not tutor:
-            raise HTTPException(status_code=404, detail="Tutor not found: " + web_request.state.tutor_id)
+            raise HTTPException(status_code=404, detail="Tutor not found: " + web_request.state.user_id)
 
         # Build context-aware prompt
         context_prompt = f"""
@@ -188,7 +188,7 @@ bedrock = boto3.client("bedrock-runtime", region_name="us-west-2")
 # Your base prompt — we'll improve this in the next steps
 def build_prompt(student, tutor, subject, class_material=None):
     prompt = f"""
-You are an expert AI tutor assistant. 
+You are an expert AI tutor assistant.
 
 Your task is to generate a personalized tutoring plan that helps the student effectively learn the subject content, using instructional strategies aligned with their specific learning needs and preferences.
 

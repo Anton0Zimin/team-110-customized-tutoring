@@ -20,7 +20,7 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Exclude specific paths from authentication
-        if request.url.path in ["/api/auth/login/", "/api/auth/register/", "/docs", "/openapi.json"]:
+        if request.url.path in ["/api/auth/login", "/api/auth/register"]:
             return await call_next(request)
 
         auth_header = request.headers.get("Authorization")
@@ -35,10 +35,10 @@ class BearerAuthMiddleware(BaseHTTPMiddleware):
         try:
             decoded_token = await JwtService().decode_access_token(token)
             request.state.access_token = decoded_token
+            request.state.user_id = decoded_token["username"]
 
             if "tutor" in decoded_token.get("cognito:groups", []):
                 request.state.user_role = "tutor"
-                request.state.tutor_id = decoded_token["username"]
             else:
                 request.state.user_role = "student"
 

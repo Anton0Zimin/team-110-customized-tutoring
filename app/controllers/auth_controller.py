@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, EmailStr, constr
 import logging
 import os
@@ -33,7 +33,7 @@ class LoginResponse(BaseModel):
     name: str
     access_token: str
 
-@router.post("/login/")
+@router.post("/login")
 async def login(request: LoginRequest):
     logger.debug(request)
 
@@ -107,7 +107,7 @@ class UserProfile(BaseModel):
     display_name: str
     role: Role
 
-@router.post("/register/")
+@router.post("/register")
 async def login(request: RegisterRequest):
     dynamodb = boto3.resource('dynamodb')
     table = dynamodb.Table('Users')
@@ -190,3 +190,16 @@ async def login(request: RegisterRequest):
         TutorService().add_tutor(tutor_profile)
 
     return {"detail": "User was created."}
+
+class CheckTokenExpirationResponse(BaseModel):
+    user_id: str
+    role: str
+
+@router.get("/me")
+async def check_token_expiration(web_request: Request, response_model=CheckTokenExpirationResponse):
+    response = CheckTokenExpirationResponse(
+        user_id=web_request.state.user_id,
+        role=web_request.state.user_role,
+    )
+
+    return response
