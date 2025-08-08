@@ -39,12 +39,12 @@ def student_chatbot_message(student_id: str, request: ChatbotRequest, web_reques
             raise HTTPException(status_code=404, detail="Student not found")
 
         # Build chatbot context prompt
-        context_prompt = build_chatbot_prompt(student, request.message)
+        generation_prompt = build_chatbot_prompt(student, request.message)
 
         # Create a base dictionary with the required parameters
         request_params = {
             "input": {
-                "text": context_prompt
+                "text": request.message
             },
             "retrieveAndGenerateConfiguration": {
                 "type": "KNOWLEDGE_BASE",
@@ -53,10 +53,7 @@ def student_chatbot_message(student_id: str, request: ChatbotRequest, web_reques
                     "modelArn": f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}',
                     'generationConfiguration': {
                         'promptTemplate': {
-                            'textPromptTemplate': """
-                                Answer the provided question using only the provided documents:
-                                $search_results$
-                            """
+                            'textPromptTemplate': generation_prompt
                         }
                     }
                 }
@@ -85,7 +82,7 @@ def build_chatbot_prompt(student, user_message):
     Build a student-focused chatbot prompt with disability context and support guidance
     """
     prompt = f"""
-You are a friendly, helpful student support chatbot for a disability tutoring service. You help students with questions about their tutoring experience, accommodations, scheduling, and general academic support.
+Human: You are a friendly, helpful student support chatbot for a disability tutoring service. You help students with questions about their tutoring experience, accommodations, scheduling, and general academic support.
 
 <Student Context>
 - Primary Disability: {student["primary_disability"]}
@@ -93,6 +90,7 @@ You are a friendly, helpful student support chatbot for a disability tutoring se
 - Preferred Format: {student["learning_preferences"]["format"]}
 - Modality: {student["learning_preferences"]["modality"]}
 - Accommodations: {', '.join(student["accommodations_needed"])}
+$search_results$
 </Student Context>
 
 <Guidelines>
@@ -104,8 +102,12 @@ You are a friendly, helpful student support chatbot for a disability tutoring se
 - Always maintain a friendly, professional tone
 </Guidelines>
 
-Student Question: {user_message}
+Student Question:
+<Question>
+$query$
+</Question>
 
-Provide a helpful response:
+Provide a helpful response. Be concise. Limit your response to 3 statements.
+Assistant:
 """
     return prompt
