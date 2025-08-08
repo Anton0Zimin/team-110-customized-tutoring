@@ -24,7 +24,7 @@ class StudentService:
         tutors_response = tutors_table.scan()
         tutors = tutors_response.get('Items', [])
 
-        if student.tutor_id == None:
+        if student.tutor_id == None or student.tutor_id == "none":
             student_dynamo_format = convert_student_to_dynamo_format(student.model_dump())
             matched_tutors = match_student_to_tutor(student_dynamo_format, tutors)
 

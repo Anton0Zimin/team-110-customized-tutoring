@@ -178,6 +178,7 @@ async def register(request: RegisterRequest):
                 style="",
                 modality=""
             )
+            tutor_id="none"
         )
 
         StudentService().add_student(student_profile)
