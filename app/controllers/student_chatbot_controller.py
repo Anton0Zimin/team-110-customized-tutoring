@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import os
@@ -20,6 +21,7 @@ bedrock = boto3.client("bedrock-agent-runtime", region_name="us-west-2")
 class ChatbotRequest(BaseModel):
     message: str
     subject: str = "General"
+    session_id: Optional[str] = None
 
 @router.post("/{student_id}/chatbot")
 def student_chatbot_message(student_id: str, request: ChatbotRequest, web_request: Request):
@@ -39,16 +41,16 @@ def student_chatbot_message(student_id: str, request: ChatbotRequest, web_reques
         # Build chatbot context prompt
         context_prompt = build_chatbot_prompt(student, request.message)
 
-        # Call AWS Bedrock
-        response = bedrock.retrieve_and_generate(
-            input={
-                'text': context_prompt
+        # Create a base dictionary with the required parameters
+        request_params = {
+            "input": {
+                "text": context_prompt
             },
-            retrieveAndGenerateConfiguration={
-                'type': 'KNOWLEDGE_BASE',
-                'knowledgeBaseConfiguration': {
-                    'knowledgeBaseId': KNOWLEDGE_BASE_ID,
-                    'modelArn': f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}',
+            "retrieveAndGenerateConfiguration": {
+                "type": "KNOWLEDGE_BASE",
+                "knowledgeBaseConfiguration": {
+                    "knowledgeBaseId": KNOWLEDGE_BASE_ID,
+                    "modelArn": f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}',
                     'generationConfiguration': {
                         'promptTemplate': {
                             'textPromptTemplate': """
@@ -56,10 +58,17 @@ def student_chatbot_message(student_id: str, request: ChatbotRequest, web_reques
                                 $search_results$
                             """
                         }
-                    },
+                    }
                 }
             }
-        )
+        }
+
+        # Conditionally add sessionId if it's not None
+        if request.session_id:
+            request_params["sessionId"] = request.session_id
+
+        # Call AWS Bedrock
+        response = bedrock.retrieve_and_generate(**request_params)
 
         logger.debug("Bedrock session id " + response.get('sessionId', None))
         return {

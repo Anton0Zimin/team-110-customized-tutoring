@@ -92,24 +92,37 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
         )
         logger.info(f"Generated prompt length: {len(prompt)}")
 
-        logger.info("Calling Bedrock...")
-        response = bedrock.retrieve_and_generate(
-            input={
-                'text': prompt
+        # Create a base dictionary with the required parameters
+        request_params = {
+            "input": {
+                "text": prompt
             },
-            retrieveAndGenerateConfiguration={
-                'type': 'KNOWLEDGE_BASE',
-                'knowledgeBaseConfiguration': {
-                    'knowledgeBaseId': KNOWLEDGE_BASE_ID,
-                    'modelArn': 'arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0',
+            "retrieveAndGenerateConfiguration": {
+                "type": "KNOWLEDGE_BASE",
+                "knowledgeBaseConfiguration": {
+                    "knowledgeBaseId": KNOWLEDGE_BASE_ID,
+                    "modelArn": f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}',
                     'generationConfiguration': {
                         'promptTemplate': {
-                            'textPromptTemplate': 'Answer the provided question using the provided documents and context: $search_results$'
+                            'textPromptTemplate': """
+                                'Answer the provided question using the provided documents and context:
+                                $search_results$
+                            """
                         }
-                    },
+                    }
                 }
             }
-        )
+        }
+
+        # Conditionally add sessionId if it's not None
+        if request.session_id:
+            request_params["sessionId"] = request.session_id
+
+        logger.info("Calling Bedrock...")
+
+        # Call AWS Bedrock
+        response = bedrock.retrieve_and_generate(**request_params)
+
         logger.info("Bedrock response received")
 
         result = {
