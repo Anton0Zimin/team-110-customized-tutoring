@@ -8,7 +8,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import type { Student } from "@/app/page"
 import { LogOut, User, Clock, BookOpen, Brain } from "lucide-react"
 import { useEffect, useState } from "react"
-import { fetchWithApi } from "@/lib/fetchWithToken"
+import { fetchWithApi, getAccessToken } from "@/lib/fetchWithToken"
 import { API_BASE } from "@/lib/constants"
 
 interface TutorViewProps {
@@ -225,7 +225,11 @@ export function TutorView({ students2, currentStudent, onStudentSelect, onLogout
                   <CardTitle className="font-serif text-[#8B1538] dark:text-primary">Clarifications & Questions</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <TutorChatbot student={currentStudent} />
+                  <TutorChatbot 
+                    student={currentStudent} 
+                    authToken={getAccessToken() || undefined}
+                    tutorId={undefined}
+                  />
                 </CardContent>
               </Card>
             </div>

@@ -16,9 +16,11 @@ interface Message {
 
 interface TutorChatbotProps {
   student: Student
+  authToken?: string
+  tutorId?: string
 }
 
-export function TutorChatbot({ student }: TutorChatbotProps) {
+export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -28,33 +30,98 @@ export function TutorChatbot({ student }: TutorChatbotProps) {
     },
   ])
   const [inputValue, setInputValue] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return
+  // Conversation starters for tutors
+  const conversationStarters = [
+    "What accommodations does this student need?",
+    "How should I adapt my teaching style for this student?",
+    "What are this student's learning preferences?",
+    "Can you suggest teaching strategies for this student's disability?",
+    "What subjects is this student most interested in?",
+    "When is this student available for sessions?"
+  ]
+
+  const handleSendMessage = async (messageText?: string) => {
+    const userInput = messageText || inputValue
+    if (!userInput.trim()) return
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: userInput,
       sender: "user",
       timestamp: new Date(),
     }
 
     setMessages((prev) => [...prev, userMessage])
     setInputValue("")
+    setIsLoading(true)
 
-    // Simulate bot response
-    setTimeout(() => {
-      const botResponse: Message = {
+    try {
+      const botResponse = await generateBotResponse(userInput)
+      const responseMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: generateBotResponse(inputValue, student),
+        text: botResponse,
         sender: "bot",
         timestamp: new Date(),
       }
-      setMessages((prev) => [...prev, botResponse])
-    }, 1000)
+      setMessages((prev) => [...prev, responseMessage])
+    } catch (error) {
+      console.error('Error getting bot response:', error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "I'm sorry, I'm having trouble responding right now. Please try again later.",
+        sender: "bot",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const generateBotResponse = (userInput: string, student: Student): string => {
+  const generateBotResponse = async (userInput: string): Promise<string> => {
+    console.log('🔥 DEBUG: Starting API call');
+    console.log('🔥 DEBUG: authToken exists:', !!authToken);
+    console.log('🔥 DEBUG: student_id:', student.student_id);
+    
+    try {
+      const apiBase = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://customized-training.org';
+      console.log('🔥 DEBUG: API URL:', `${apiBase}/api/chat/${student.student_id}/chat`);
+      
+      const response = await fetch(`${apiBase}/api/chat/${student.student_id}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          message: userInput,
+          subject: "General",
+          tutor_id: tutorId || "",
+          class_material: ""
+        })
+      });
+
+      console.log('🔥 DEBUG: Response status:', response.status);
+      console.log('🔥 DEBUG: Response ok:', response.ok);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('🔥 DEBUG: Error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('🔥 DEBUG: Success response:', data);
+      return data.response || 'I apologize, but I could not generate a response at this time.';
+    } catch (error) {
+      console.error('🔥 DEBUG: API call failed:', error);
+      throw error; // Re-throw instead of falling back
+    }
+  }
+
+  const getFallbackResponse = (userInput: string, student: Student): string => {
     const input = userInput.toLowerCase()
 
     if (input.includes("accommodation") || input.includes("need")) {
@@ -112,6 +179,22 @@ export function TutorChatbot({ student }: TutorChatbotProps) {
 
   return (
     <div className="space-y-4">
+      {/* Conversation Starters */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {conversationStarters.map((starter, index) => (
+          <Button
+            key={index}
+            variant="outline"
+            size="sm"
+            className="text-xs font-serif h-8 px-3 hover:bg-[#8B1538] hover:text-white transition-colors"
+            onClick={() => handleSendMessage(starter)}
+            disabled={isLoading}
+          >
+            {starter}
+          </Button>
+        ))}
+      </div>
+
       <div className="h-64 overflow-y-auto space-y-3 p-4 bg-gray-50 rounded-lg">
         {messages.map((message) => (
           <div
@@ -149,8 +232,16 @@ export function TutorChatbot({ student }: TutorChatbotProps) {
           className="font-serif"
           onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
         />
-        <Button onClick={handleSendMessage} className="bg-[#8B1538] hover:bg-[#7A1230] text-white">
-          <Send className="w-4 h-4" />
+        <Button 
+          onClick={() => handleSendMessage()} 
+          className="bg-[#8B1538] hover:bg-[#7A1230] text-white"
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
         </Button>
       </div>
     </div>
