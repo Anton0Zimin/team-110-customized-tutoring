@@ -177,7 +177,7 @@ async def register(request: RegisterRequest):
                 format="",
                 style="",
                 modality=""
-            )
+            ),
             tutor_id="none"
         )
 
