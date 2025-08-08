@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Send, Bot, User } from "lucide-react"
 import type { Student } from "@/app/page"
+import { getChatSessionId, setChatSessionId } from "@/lib/globals"
 
 interface Message {
   id: string
@@ -83,7 +84,7 @@ export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps)
   const generateBotResponse = async (userInput: string): Promise<string> => {
     try {
       const apiBase = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://customized-training.org';
-      
+
       const response = await fetch(`${apiBase}/api/chat/${student.student_id}/chat`, {
         method: 'POST',
         headers: {
@@ -93,8 +94,7 @@ export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps)
         body: JSON.stringify({
           message: userInput,
           subject: "General",
-          tutor_id: tutorId || "",
-          class_material: ""
+          session_id: getChatSessionId()
         })
       });
 
@@ -104,6 +104,8 @@ export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps)
       }
 
       const data = await response.json();
+      setChatSessionId(data.session_id);
+
       return data.response || 'I apologize, but I could not generate a response at this time.';
     } catch (error) {
       console.error('API call failed:', error);
@@ -222,8 +224,8 @@ export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps)
           className="font-serif"
           onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
         />
-        <Button 
-          onClick={() => handleSendMessage()} 
+        <Button
+          onClick={() => handleSendMessage()}
           className="bg-primary hover:bg-primary/90 text-primary-foreground"
           disabled={isLoading}
         >

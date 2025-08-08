@@ -209,3 +209,5 @@ frontend/out/
 .DS_Store
 app/prompts/*.txt
 container-defs.json
+*.orig
+*.bak
