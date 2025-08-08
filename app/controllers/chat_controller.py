@@ -100,7 +100,7 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
                     "modelArn": f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}',
                     'generationConfiguration': {
                         'promptTemplate': {
-                            'textPromptTemplate': "Answer using provided documents: $search_results$\n\nBe concise and specific. Return only relevant information without extra dialogue or fluff."
+                            'textPromptTemplate': "Answer user questions using the documents: $search_results$. Be concise and specific. "
                         }
                     }
                 }
