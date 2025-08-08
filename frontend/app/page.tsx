@@ -28,7 +28,7 @@ export interface Student {
   }>
   preferred_subjects: string[]
   additional_info: string
-  uploaded_files?: File[]
+  uploaded_files?: File[] | string[]
   tutor_id?: string
   tutor_name?: string
 }

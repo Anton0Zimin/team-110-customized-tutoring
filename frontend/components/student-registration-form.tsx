@@ -120,7 +120,7 @@ export function StudentRegistrationForm({ onSubmit }: StudentRegistrationFormPro
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // Validate FHDA ID is exactly 8 digits
@@ -130,9 +130,37 @@ export function StudentRegistrationForm({ onSubmit }: StudentRegistrationFormPro
     }
 
     if (formData.primary_disability && formData.learning_preferences?.style) {
+      let uploadedFileUrls: string[] = []
+      
+      // Upload files if any exist
+      if (uploadedFiles.length > 0) {
+        try {
+          for (const file of uploadedFiles) {
+            const formData = new FormData()
+            formData.append('file', file)
+            
+            const response = await fetchWithApi(`${API_BASE}/api/file/upload`, {
+              method: 'POST',
+              body: formData,
+            })
+            
+            if (response.ok) {
+              const fileUrl = await response.text()
+              uploadedFileUrls.push(fileUrl)
+            } else {
+              alert(`Failed to upload ${file.name}. Please try again.`)
+              return
+            }
+          }
+        } catch (error) {
+          alert('Error uploading files. Please try again.')
+          return
+        }
+      }
+
       onSubmit({
         ...formData,
-        uploaded_files: uploadedFiles,
+        uploaded_files: uploadedFileUrls,
       } as Student)
     }
   }

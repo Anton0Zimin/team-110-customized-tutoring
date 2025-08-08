@@ -18,6 +18,24 @@ interface StudyPlanData {
   accommodations: string[];
 }
 
+const loadingMessages = [
+  "Matching lessons to student brainwaves…",
+  "Calibrating difficulty so no one cries… including the tutor.",
+  "Balancing 'cover the syllabus' with 'don't bore them to sleep.'",
+  "Checking if we can teach calculus with cat memes.",
+  "Allocating enough review time to actually stick in memory.",
+  "Avoiding scheduling lessons during universally sleepy hours.",
+  "Loading optimal 'aha!' moments…",
+  "Making sure practice problems aren't secretly puzzles from the 1800s.",
+  "Strategizing to outsmart student procrastination.",
+  "Inserting well-timed breaks to prevent brain overheating.",
+  "Weighing lecture time vs. hands-on learning for maximum retention.",
+  "Adding emergency 'explain again' slots.",
+  "Reinforcing concepts before exams sneak up.",
+  "Minimizing tutor caffeine intake… or not.",
+  "Finalizing a plan that makes both sides feel like geniuses."
+];
+
 export function StudyPlan({ student }: StudyPlanProps) {
   const [studyPlanData, setStudyPlanData] = useState<StudyPlanData>({
     overview: "⌛ Loading personalized study plan...",
@@ -27,6 +45,25 @@ export function StudyPlan({ student }: StudyPlanProps) {
     accommodations: []
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [currentMessage, setCurrentMessage] = useState(loadingMessages[0]);
+
+  useEffect(() => {
+    let messageInterval: NodeJS.Timeout;
+
+    if (isLoading) {
+      messageInterval = setInterval(() => {
+        setCurrentMessage(prevMessage => {
+          const currentIndex = loadingMessages.indexOf(prevMessage);
+          const nextIndex = (currentIndex + 1) % loadingMessages.length;
+          return loadingMessages[nextIndex];
+        });
+      }, 6000);
+    }
+
+    return () => {
+      if (messageInterval) clearInterval(messageInterval);
+    };
+  }, [isLoading]);
 
   useEffect(() => {
     async function fetchStudyPlan() {
@@ -56,6 +93,28 @@ export function StudyPlan({ student }: StudyPlanProps) {
 
     fetchStudyPlan();
   }, [student.student_id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-6 py-12">
+        <div className="relative">
+          <img 
+            src="/assets/loading_find.gif" 
+            alt="Loading..." 
+            className="w-32 h-32 object-contain"
+          />
+        </div>
+        <div className="text-center space-y-2">
+          <h3 className="font-serif text-lg font-semibold text-[#8B1538] dark:text-primary">
+            Creating Your Personalized Study Plan
+          </h3>
+          <p className="font-serif text-sm text-muted-foreground max-w-md mx-auto">
+            {currentMessage}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
