@@ -98,9 +98,9 @@ export function StudyPlan({ student }: StudyPlanProps) {
     return (
       <div className="flex flex-col items-center justify-center space-y-6 py-12">
         <div className="relative">
-          <img 
-            src="/assets/loading_find.gif" 
-            alt="Loading..." 
+          <img
+            src="/assets/loading_find.gif"
+            alt="Loading..."
             className="w-32 h-32 object-contain"
           />
         </div>
@@ -137,7 +137,7 @@ export function StudyPlan({ student }: StudyPlanProps) {
       </Card>
 
       {/* Learning Strategies */}
-      {studyPlanData.strategies.length > 0 && (
+      {studyPlanData.strategies?.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="font-serif text-[#8B1538] flex items-center">
@@ -159,7 +159,7 @@ export function StudyPlan({ student }: StudyPlanProps) {
       )}
 
       {/* Learning Activities */}
-      {studyPlanData.activities.length > 0 && (
+      {studyPlanData.activities?.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="font-serif text-[#8B1538] flex items-center">
@@ -181,7 +181,7 @@ export function StudyPlan({ student }: StudyPlanProps) {
       )}
 
       {/* Subject-Specific Adaptations */}
-      {studyPlanData.subjectAdaptations.length > 0 ? (
+      {studyPlanData.subjectAdaptations?.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle className="font-serif text-[#8B1538] flex items-center">
@@ -226,7 +226,7 @@ export function StudyPlan({ student }: StudyPlanProps) {
       )}
 
       {/* Accommodation Implementation */}
-      {studyPlanData.accommodations.length > 0 ? (
+      {studyPlanData.accommodations?.length > 0 ? (
         <Card className="bg-yellow-50 border-yellow-200">
           <CardHeader>
             <CardTitle className="font-serif text-yellow-800">Accommodation Implementation</CardTitle>
