@@ -150,10 +150,7 @@ def get_summary_plan(student_id: str):
             }
         )
 
-        return {
-            "response": json.loads(response['output']['text']),
-            "session_id": response.get('sessionId', None)
-        }
+        return json.loads(response['output']['text'])
 
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
