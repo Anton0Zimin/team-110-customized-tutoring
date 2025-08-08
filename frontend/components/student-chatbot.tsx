@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Send, Bot, User } from "lucide-react"
+import { se } from "date-fns/locale"
+import { getChatSessionId, setChatSessionId } from "@/lib/globals"
 
 interface Message {
   id: string
@@ -21,7 +23,7 @@ interface StudentChatbotProps {
 export function StudentChatbot({ studentId, authToken }: StudentChatbotProps) {
   const conversationStarters = [
     "How will I be matched with a tutor?",
-    "What accommodations are available?", 
+    "What accommodations are available?",
     "How do I schedule tutoring sessions?",
     "What if I need to change my availability?",
     "How do I contact my tutor?",
@@ -62,7 +64,7 @@ export function StudentChatbot({ studentId, authToken }: StudentChatbotProps) {
 
     try {
       const botResponseText = await generateBotResponse(currentInput);
-      
+
       // Remove typing indicator and add real response
       setMessages((prev) => {
         const withoutTyping = prev.filter(msg => msg.id !== "typing");
@@ -100,7 +102,8 @@ export function StudentChatbot({ studentId, authToken }: StudentChatbotProps) {
         },
         body: JSON.stringify({
           message: userInput,
-          subject: "General"
+          subject: "General",
+          session_id: getChatSessionId()
         })
       });
 
@@ -109,6 +112,8 @@ export function StudentChatbot({ studentId, authToken }: StudentChatbotProps) {
       }
 
       const data = await response.json();
+      setChatSessionId(data.session_id);
+
       return data.response;
     } catch (error) {
       console.error('Error getting bot response:', error);

@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import os
@@ -20,7 +21,7 @@ tutor_service = TutorService()
 class ChatRequest(BaseModel):
     message: str
     subject: str = "General"
-    tutor_id: str = None
+    session_id: Optional[str] = None
 
 @router.get("/{student_id}/summary")
 def get_summary_plan(student_id: str):
