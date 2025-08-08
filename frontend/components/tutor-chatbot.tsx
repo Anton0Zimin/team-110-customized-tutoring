@@ -81,13 +81,8 @@ export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps)
   }
 
   const generateBotResponse = async (userInput: string): Promise<string> => {
-    console.log('🔥 DEBUG: Starting API call');
-    console.log('🔥 DEBUG: authToken exists:', !!authToken);
-    console.log('🔥 DEBUG: student_id:', student.student_id);
-    
     try {
       const apiBase = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://customized-training.org';
-      console.log('🔥 DEBUG: API URL:', `${apiBase}/api/chat/${student.student_id}/chat`);
       
       const response = await fetch(`${apiBase}/api/chat/${student.student_id}/chat`, {
         method: 'POST',
@@ -103,21 +98,16 @@ export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps)
         })
       });
 
-      console.log('🔥 DEBUG: Response status:', response.status);
-      console.log('🔥 DEBUG: Response ok:', response.ok);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.log('🔥 DEBUG: Error response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('🔥 DEBUG: Success response:', data);
       return data.response || 'I apologize, but I could not generate a response at this time.';
     } catch (error) {
-      console.error('🔥 DEBUG: API call failed:', error);
-      throw error; // Re-throw instead of falling back
+      console.error('API call failed:', error);
+      return getFallbackResponse(userInput, student);
     }
   }
 
@@ -186,7 +176,7 @@ export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps)
             key={index}
             variant="outline"
             size="sm"
-            className="text-xs font-serif h-8 px-3 hover:bg-[#8B1538] hover:text-white transition-colors"
+            className="text-xs font-serif h-8 px-3 border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
             onClick={() => handleSendMessage(starter)}
             disabled={isLoading}
           >
@@ -195,20 +185,20 @@ export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps)
         ))}
       </div>
 
-      <div className="h-64 overflow-y-auto space-y-3 p-4 bg-gray-50 rounded-lg">
+      <div className="h-64 overflow-y-auto space-y-3 p-4 bg-muted rounded-lg">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex items-start space-x-2 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
           >
             {message.sender === "bot" && (
-              <div className="w-8 h-8 bg-[#8B1538] rounded-full flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                <Bot className="w-4 h-4 text-primary-foreground" />
               </div>
             )}
             <Card
               className={`max-w-xs ${
-                message.sender === "user" ? "bg-[#8B1538] text-white" : "bg-white border-gray-200"
+                message.sender === "user" ? "bg-primary text-primary-foreground" : "bg-card border-border"
               }`}
             >
               <CardContent className="p-3">
@@ -216,8 +206,8 @@ export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps)
               </CardContent>
             </Card>
             {message.sender === "user" && (
-              <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-muted-foreground rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-4 h-4 text-muted" />
               </div>
             )}
           </div>
@@ -234,7 +224,7 @@ export function TutorChatbot({ student, authToken, tutorId }: TutorChatbotProps)
         />
         <Button 
           onClick={() => handleSendMessage()} 
-          className="bg-[#8B1538] hover:bg-[#7A1230] text-white"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
           disabled={isLoading}
         >
           {isLoading ? (

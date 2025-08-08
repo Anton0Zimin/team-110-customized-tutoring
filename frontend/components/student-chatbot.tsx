@@ -118,20 +118,20 @@ export function StudentChatbot({ studentId, authToken }: StudentChatbotProps) {
 
   return (
     <div className="space-y-4">
-      <div className="h-64 overflow-y-auto space-y-3 p-4 bg-gray-50 rounded-lg">
+      <div className="h-64 overflow-y-auto space-y-3 p-4 bg-muted rounded-lg">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex items-start space-x-2 ${message.sender === "user" ? "justify-end" : "justify-start"}`}
           >
             {message.sender === "bot" && (
-              <div className="w-8 h-8 bg-[#8B1538] rounded-full flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                <Bot className="w-4 h-4 text-primary-foreground" />
               </div>
             )}
             <Card
               className={`max-w-xs ${
-                message.sender === "user" ? "bg-[#8B1538] text-white" : "bg-white border-gray-200"
+                message.sender === "user" ? "bg-primary text-primary-foreground" : "bg-card border-border"
               }`}
             >
               <CardContent className="p-3">
@@ -139,8 +139,8 @@ export function StudentChatbot({ studentId, authToken }: StudentChatbotProps) {
               </CardContent>
             </Card>
             {message.sender === "user" && (
-              <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center flex-shrink-0">
-                <User className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 bg-muted-foreground rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-4 h-4 text-muted" />
               </div>
             )}
           </div>
@@ -154,7 +154,7 @@ export function StudentChatbot({ studentId, authToken }: StudentChatbotProps) {
             onClick={() => {
               setInputValue(starter);
             }}
-            className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full border text-gray-700 transition-colors"
+            className="text-xs px-3 py-1 bg-muted hover:bg-muted/80 rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors"
           >
             {starter}
           </button>
@@ -169,7 +169,7 @@ export function StudentChatbot({ studentId, authToken }: StudentChatbotProps) {
           className="font-serif"
           onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
         />
-        <Button onClick={handleSendMessage} className="bg-[#8B1538] hover:bg-[#7A1230] text-white">
+        <Button onClick={handleSendMessage} className="bg-primary hover:bg-primary/90 text-primary-foreground">
           <Send className="w-4 h-4" />
         </Button>
       </div>
