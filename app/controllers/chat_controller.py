@@ -184,6 +184,35 @@ Provide practical guidance:
 
 Be concise and specific. Return only relevant information without extra dialogue or fluff.
 """
+    prompt += f"""
+<examples>
+    <example>
+    H: The student has ADHD. How can I help them stay focused during this lesson?
+    A: Break the lesson into short 5–10 minute segments, use timers or visual countdowns, and incorporate brief interactive activities between sections.
+    </example>
+
+    <example>
+    H: The student struggles with reading due to dyslexia. How can I adapt this lesson for them?
+    A: Use audio support or text-to-speech tools, provide key terms with phonetic spelling, and break reading materials into short, manageable chunks with visual aids.
+    </example>
+
+    <example>
+    H: Can you explain what the main objective of this lesson plan is?
+    A: The objective is for the student to understand Newton’s Second Law and apply F=ma to real-world problems while practicing unit analysis.
+    </example>
+
+    <example>
+    H: How can I check if the student understood today’s lesson?
+    A: Ask them to explain the concept in their own words and solve one example problem without guidance. If they can do both correctly, they’ve likely grasped the material.
+    </example>
+
+    <example>
+    H: What should I do if the student gets frustrated halfway through?
+    A: Pause the lesson, acknowledge their frustration, and offer a short, low-pressure activity before returning to the main task. Break the remaining material into smaller steps.
+    </example>
+</examples>
+
+    """
     
     return prompt
 
