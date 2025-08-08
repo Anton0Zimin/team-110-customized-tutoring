@@ -104,10 +104,7 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
                     "modelArn": f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}',
                     'generationConfiguration': {
                         'promptTemplate': {
-                            'textPromptTemplate': """
-                                'Answer the provided question using the provided documents and context:
-                                $search_results$
-                            """
+                            'textPromptTemplate': "Answer using provided documents: $search_results$\n\nBe concise and specific. Return only relevant information without extra dialogue or fluff."
                         }
                     }
                 }
@@ -148,116 +145,50 @@ bedrock = boto3.client("bedrock-agent-runtime", region_name="us-west-2")
 
 # Your base prompt — we'll improve this in the next steps
 def build_prompt(student, tutor, subject, class_material=None):
-    prompt = f"""
-You are an expert tutor assistant who specialized in providing personalized, accessible tutoring for students with disabilities.
-
-Your task is to generate a personalized tutoring plan that helps the student effectively learn the subject content, using instructional strategies aligned with their specific learning needs and preferences.
-
-Do not reference or repeat any personally identifiable information. Focus only on customizing the approach to meet the student's accessibility requirements.
-
-<Student Profile>
-- Disability: {student["primary_disability"]}
-- Learning Style: {student["learning_preferences"]["style"]}
-- Modality: {student["learning_preferences"]["modality"]}
-- Format: {student["learning_preferences"]["format"]}
-- Accommodations: {', '.join(student["accommodations_needed"])}
-
-Subject: {subject}
-"""
-
+    # Create concise profile strings
+    student_profile = f"{student['primary_disability']} | {student['learning_preferences']['style']} | {student['learning_preferences']['format']} | {', '.join(student['accommodations_needed'])}"
+    
+    prompt = f"Student: {student_profile}\nSubject: {subject}\n"
+    
     if tutor:
-        prompt += f"""
-
-Tutor Profile:
-- Style: {tutor["tutoring_style"]}
-- Subjects: {', '.join(tutor["subjects"])}
-- Tools: {', '.join(tutor["tools_or_technologies"])}
-- Accessibility Skills: {', '.join(tutor["accommodation_skills"])}
-- Required Accommodations: {', '.join(student["accommodations_needed"])}
-</Student Profile>
-
-<Study Context>
-- Subject: {subject}
-"""
-
+        tutor_profile = f"{tutor['tutoring_style']} | {', '.join(tutor['subjects'])} | {', '.join(tutor['accommodation_skills'])}"
+        prompt += f"Tutor: {tutor_profile}\n"
+    
     if class_material:
-        prompt += f"""
-- Class Material or Assignment:
-{class_material}
-
-
-Provide personalized, accessible tutoring that considers the student's specific needs.
-
-Respond in this format:
-<>
-"""
-
+        prompt += f"Material: {class_material[:300]}...\n"
+    
+    prompt += "Generate a personalized study plan focusing on accessibility and learning effectiveness. Be concise and specific."
+    
     return prompt
 
 def build_tutor_chat_prompt(student, tutor, message, subject, class_material=None):
+    # Concise profile summary
+    student_profile = f"{student['primary_disability']} | {student['learning_preferences']['style']} | {student['learning_preferences']['format']} | {', '.join(student['accommodations_needed'])}"
+    
     prompt = f"""
-You are an expert disability services tutoring consultant with deep knowledge of evidence-based practices for supporting students with disabilities in academic settings.
-
 TUTOR QUESTION: "{message}"
 
-STUDENT CONTEXT:
-- Primary Disability: {student["primary_disability"]}
-- Learning Style: {student["learning_preferences"]["style"]}
-- Preferred Modality: {student["learning_preferences"]["modality"]}
-- Session Format: {student["learning_preferences"]["format"]}
-- Required Accommodations: {', '.join(student["accommodations_needed"])}
-- Subject Area: {subject}
+STUDENT: {student_profile}
+SUBJECT: {subject}
 """
-
+    
     if tutor:
-        prompt += f"""
-
-TUTOR BACKGROUND:
-- Teaching Style: {tutor["tutoring_style"]}
-- Subject Expertise: {', '.join(tutor["subjects"])}
-- Available Tools: {', '.join(tutor["tools_or_technologies"])}
-- Accommodation Experience: {', '.join(tutor["accommodation_skills"])}
-"""
-
+        tutor_profile = f"{tutor['tutoring_style']} | {', '.join(tutor['subjects'])} | {', '.join(tutor['accommodation_skills'])}"
+        prompt += f"TUTOR: {tutor_profile}\n"
+    
     if class_material:
-        prompt += f"""
-
-CURRENT LESSON CONTENT:
-{class_material}
-"""
-
+        prompt += f"MATERIAL: {class_material[:200]}...\n"
+    
     prompt += f"""
+Provide practical guidance:
+1. **Strategies** for {student['primary_disability']} in {subject}
+2. **Accommodation steps** for: {', '.join(student['accommodations_needed'])}
+3. **Learning tips** for {student['learning_preferences']['style']} style
+4. **Immediate actions** for the tutor
 
-PROVIDE CUSTOMIZED GUIDANCE:
-
-1. DISABILITY-SPECIFIC STRATEGIES:
-   - How does {student["primary_disability"]} typically impact learning in {subject}?
-   - What evidence-based teaching methods work best for this disability?
-   - How should content be presented to maximize comprehension?
-
-2. ACCOMMODATION IMPLEMENTATION:
-   - Step-by-step guidance for implementing: {', '.join(student["accommodations_needed"])}
-   - How to seamlessly integrate accommodations without stigmatization
-   - Backup strategies if primary accommodations aren't working
-
-3. LEARNING STYLE OPTIMIZATION:
-   - Specific techniques for {student["learning_preferences"]["style"]} learners
-   - How to adapt {student["learning_preferences"]["modality"]} delivery for this disability
-   - Best practices for {student["learning_preferences"]["format"]} sessions
-
-4. PROACTIVE PROBLEM-SOLVING:
-   - Common challenges students with {student["primary_disability"]} face in {subject}
-   - Early warning signs of frustration or disengagement
-   - Strategies to maintain motivation and confidence
-
-5. PRACTICAL NEXT STEPS:
-   - Immediate actions the tutor can take
-   - Resources or materials to prepare
-   - How to measure progress and adjust approach
-
-Focus on actionable, research-backed strategies that respect the student's dignity and promote independence.
+Be concise and specific. Return only relevant information without extra dialogue or fluff.
 """
-
+    
     return prompt
 
 # Example student and tutor (replace with real data later)
