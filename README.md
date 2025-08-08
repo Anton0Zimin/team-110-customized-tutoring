@@ -46,6 +46,10 @@ CCC AI Summer Camp 2025
 
 ## Tech Stack
 
+![](docs/fastapi.png)
+![](docs/nextjs.png)
+![](docs/docker.png)
+
 - Backend
     - FastAPI (Python)
 - Frontend
