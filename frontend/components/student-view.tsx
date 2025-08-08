@@ -39,42 +39,42 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
   const handleRegistrationComplete = async (studentData: Student) => {
     setViewState('loading')
     setIsMatching(true)
-    
-    const minLoadingTime = 10000 // 10 seconds minimum
-    
+
+    const minLoadingTime = 5000 // 5 seconds minimum
+
     try {
       // Call the parent's onRegistration which handles the API call
       const updatedStudentData = await onRegistration(studentData)
-      
+
       // Check if tutor data was returned from the API
       if (updatedStudentData.tutor_id && updatedStudentData.tutor_name) {
         console.log('Using tutor match from API:', updatedStudentData.tutor_id, updatedStudentData.tutor_name)
-        
+
         // Transform the tutor data to frontend format
         const transformedTutor: TutorMatch = {
           id: updatedStudentData.tutor_id,
           name: updatedStudentData.tutor_name,
           specialty: "Personalized Tutoring",
-          experience: "Experienced Tutor", 
+          experience: "Experienced Tutor",
           rating: 4.8,
           bio: "Dedicated tutor committed to helping you succeed with personalized learning strategies.",
           matchReason: "Perfect match found based on your learning preferences and needs!"
         }
-        
+
         setTutorMatch(transformedTutor)
-        
+
         // Show loading for the full 10 seconds
         setTimeout(() => {
           setViewState('matched')
           setShowConfetti(true)
           setIsMatching(false)
-          
+
           // Hide confetti after 5 seconds
           setTimeout(() => {
             setShowConfetti(false)
           }, 5000)
         }, minLoadingTime)
-        
+
       } else {
         console.log('No tutor data in API response, using fallback')
         // Fallback if no tutor data
@@ -96,20 +96,20 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
       bio: "Specialized in teaching students with learning differences, particularly in STEM subjects. PhD in Special Education.",
       matchReason: "Perfect match based on your preferences!"
     }
-    
+
     setTutorMatch(fallbackTutor)
-    
+
     setTimeout(() => {
       setViewState('matched')
       setShowConfetti(true)
       setIsMatching(false)
-      
+
       setTimeout(() => {
         setShowConfetti(false)
       }, 5000)
     }, Math.max(0, remainingTime))
   }
-  
+
   // Get window dimensions for confetti
   useEffect(() => {
     const updateDimensions = () => {
@@ -118,7 +118,7 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
         height: window.innerHeight
       })
     }
-    
+
     updateDimensions()
     window.addEventListener('resize', updateDimensions)
     return () => window.removeEventListener('resize', updateDimensions)
@@ -159,7 +159,7 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
             gravity={0.3}
           />
         )}
-        
+
         {viewState === 'registration' && (
           <div className="space-y-6">
             <div className="text-center space-y-2">
@@ -169,7 +169,7 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
             <StudentRegistrationForm onSubmit={handleRegistrationComplete} />
           </div>
         )}
-        
+
         {viewState === 'loading' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[60vh]">
             {/* Loading Animation Section */}
@@ -184,13 +184,13 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
                 <h3 className="text-xl font-serif font-bold text-green-800 mb-2">Registration Successful!</h3>
                 <p className="text-green-700 font-serif">Just wait while we find your perfect tutor match...</p>
               </div>
-              
+
               {/* Large Emphasized Loading Animation */}
               <div className="relative">
                 <div className="w-64 h-64 rounded-full border-4 border-primary/20 flex items-center justify-center bg-primary/5">
-                  <img 
-                    src="/assets/loading_match.gif" 
-                    alt="Finding your tutor match" 
+                  <img
+                    src="/assets/loading_match.gif"
+                    alt="Finding your tutor match"
                     className="w-48 h-48 object-contain"
                     onError={(e) => {
                       console.error('Failed to load GIF:', e);
@@ -211,7 +211,7 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
                 {/* Pulsing ring animation */}
                 <div className="absolute inset-0 w-64 h-64 rounded-full border-4 border-primary/40 animate-pulse"></div>
               </div>
-              
+
               <div className="text-center space-y-2">
                 <p className="text-primary font-serif font-medium">
                   {isMatching ? "Finding your perfect tutor match..." : "Analyzing your preferences..."}
@@ -221,7 +221,7 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
                 </p>
               </div>
             </div>
-            
+
             {/* Chatbot Section */}
             <div className="flex flex-col justify-start">
               <Card>
@@ -231,16 +231,16 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <StudentChatbot 
-                    studentId={getUserId() || ""} 
-                    authToken={getAccessToken() || ""} 
+                  <StudentChatbot
+                    studentId={getUserId() || ""}
+                    authToken={getAccessToken() || ""}
                   />
                 </CardContent>
               </Card>
             </div>
           </div>
         )}
-        
+
         {viewState === 'matched' && tutorMatch && (
           <div className="space-y-6">
             {/* Match Found Header */}
@@ -251,7 +251,7 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
               <h2 className="text-4xl font-serif font-bold text-primary">Perfect Match Found!</h2>
               <p className="text-lg text-muted-foreground font-serif">{tutorMatch.matchReason}</p>
             </div>
-            
+
             {/* Tutor Profile Card */}
             <Card className="border-2 border-primary bg-gradient-to-br from-primary/5 to-primary/10 shadow-lg">
               <CardHeader className="text-center pb-4">
@@ -279,19 +279,19 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
                     <span className="font-serif font-medium">150+</span>
                   </div>
                 </div>
-                
+
                 <div className="pt-4 border-t">
                   <h3 className="font-serif font-semibold mb-2 text-primary">About Your Tutor</h3>
                   <p className="font-serif text-muted-foreground leading-relaxed">{tutorMatch.bio}</p>
                 </div>
-                
+
                 <div className="bg-primary/10 rounded-lg p-4 mt-4">
                   <p className="font-serif text-sm text-center text-primary font-medium">
                     🎉 Your tutor will contact you within 24 hours to schedule your first session!
                   </p>
                 </div>
-                <Button 
-                  onClick={() => setViewState('chatbot')} 
+                <Button
+                  onClick={() => setViewState('chatbot')}
                   className="w-full mt-6 text-lg font-serif py-3"
                 >
                   What's Next?
@@ -300,7 +300,7 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
             </Card>
           </div>
         )}
-        
+
         {viewState === 'chatbot' && tutorMatch && (
           <div className="space-y-6">
             {/* Quick Summary Card */}
@@ -310,7 +310,7 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground font-serif">
-                  You've been matched with {tutorMatch.name}. While you wait for them to contact you, 
+                  You've been matched with {tutorMatch.name}. While you wait for them to contact you,
                   continue chatting below!
                 </p>
               </CardContent>
@@ -323,9 +323,9 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <StudentChatbot 
-                  studentId={getUserId() || ""} 
-                  authToken={getAccessToken() || ""} 
+                <StudentChatbot
+                  studentId={getUserId() || ""}
+                  authToken={getAccessToken() || ""}
                 />
               </CardContent>
             </Card>
