@@ -1,6 +1,6 @@
 # Study Plan
 
-## Input
+## Query
 
 ```
 

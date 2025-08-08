@@ -23,6 +23,8 @@ CCC AI Summer Camp 2025
 ### Sample Prompts
 
 - [Study Plan](docs/study_plan_prompt.md)
+- [Tutor Chat](docs/tutor_chat_prompt.md)
+- [Student Chat](docs/student_chat_prompt.md)
 
 ## AWS Services
 
