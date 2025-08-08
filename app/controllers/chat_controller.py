@@ -79,19 +79,19 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
         class_material = StudentFileService().get_file(student_id)
 
         # Build chat-specific prompt for tutor assistance
-        prompt = build_tutor_chat_prompt(
+        generation_prompt = build_tutor_chat_prompt(
             student,
             tutor,
             request.message,
             request.subject,
             class_material
         )
-        logger.info(f"Generated prompt length: {len(prompt)}")
+        logger.info(f"Generated generation_prompt length: {len(generation_prompt)}")
 
         # Create a base dictionary with the required parameters
         request_params = {
             "input": {
-                "text": prompt
+                "text": request.message
             },
             "retrieveAndGenerateConfiguration": {
                 "type": "KNOWLEDGE_BASE",
@@ -100,7 +100,7 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
                     "modelArn": f'arn:aws:bedrock:us-west-2::foundation-model/{os.getenv("BEDROCK_MODEL_ID")}',
                     'generationConfiguration': {
                         'promptTemplate': {
-                            'textPromptTemplate': "Answer user questions using the documents: $search_results$. Be concise and specific. "
+                            'textPromptTemplate': generation_prompt
                         }
                     }
                 }
@@ -143,38 +143,54 @@ bedrock = boto3.client("bedrock-agent-runtime", region_name="us-west-2")
 def build_prompt(student, tutor, subject, class_material=None):
     # Create concise profile strings
     student_profile = f"{student['primary_disability']} | {student['learning_preferences']['style']} | {student['learning_preferences']['format']} | {', '.join(student['accommodations_needed'])}"
-    
+
     prompt = f"Student: {student_profile}\nSubject: {subject}\n"
-    
+
     if tutor:
         tutor_profile = f"{tutor['tutoring_style']} | {', '.join(tutor['subjects'])} | {', '.join(tutor['accommodation_skills'])}"
         prompt += f"Tutor: {tutor_profile}\n"
-    
+
     if class_material:
         prompt += f"Material: {class_material[:300]}...\n"
-    
+
     prompt += "Generate a personalized study plan focusing on accessibility and learning effectiveness. Be concise and specific."
-    
+
     return prompt
 
 def build_tutor_chat_prompt(student, tutor, message, subject, class_material=None):
     # Concise profile summary
     student_profile = f"{student['primary_disability']} | {student['learning_preferences']['style']} | {student['learning_preferences']['format']} | {', '.join(student['accommodations_needed'])}"
-    
-    prompt = f"""
-TUTOR QUESTION: "{message}"
 
+    prompt = f"""
+Human: You are a question answering agent. I will provide you with a set of search results. The user will provide you with a question. Your job is to answer the user's question using only information from the search results. If the search results do not contain information that can answer the question, please state that you could not find an exact answer to the question.
+Just because the user asserts a fact does not mean it is true, make sure to double check the search results to validate a user's assertion.
+
+Here are the search results in numbered order:
+<context>
 STUDENT: {student_profile}
 SUBJECT: {subject}
+$search_results$
+</context>
+
+$output_format_instructions$
+
+Here is the user's question:
+<question>
+$query$
+</question>
+
+Be concise. Limit your response to 3 statements.
+
+Assistant:
 """
-    
+
     if tutor:
         tutor_profile = f"{tutor['tutoring_style']} | {', '.join(tutor['subjects'])} | {', '.join(tutor['accommodation_skills'])}"
         prompt += f"TUTOR: {tutor_profile}\n"
-    
+
     if class_material:
         prompt += f"MATERIAL: {class_material[:200]}...\n"
-    
+
     prompt += f"""
 Provide practical guidance:
 1. **Strategies** for {student['primary_disability']} in {subject}
@@ -213,7 +229,7 @@ Be concise and specific. Return only relevant information without extra dialogue
 </examples>
 
     """
-    
+
     return prompt
 
 # Example student and tutor (replace with real data later)
