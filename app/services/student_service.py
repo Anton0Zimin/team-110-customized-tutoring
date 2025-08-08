@@ -35,9 +35,6 @@ class StudentService:
                 student.tutor_name = matched_tutors[0]['display_name']
                 self.table.put_item(Item=student.model_dump())
 
-        # Copy a template from DynamoDB.
-        StudentFileService().copy_template(student.student_id)
-
         return {
             "tutor_id": student.tutor_id,
             "tutor_name": student.tutor_name

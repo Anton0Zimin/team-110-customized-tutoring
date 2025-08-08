@@ -13,7 +13,7 @@ import { getAccessToken } from "@/lib/fetchWithToken"
 import Confetti from "react-confetti"
 
 interface StudentViewProps {
-  onRegistration: (student: Student) => void
+  onRegistration: (student: Student) => Promise<Student>
   onLogout: () => void
 }
 
@@ -33,38 +33,81 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
   const [viewState, setViewState] = useState<ViewState>('registration')
   const [showConfetti, setShowConfetti] = useState(false)
   const [windowDimensions, setWindowDimensions] = useState({ width: 0, height: 0 })
-  
-  // Hardcoded tutor match data - TODO: Replace with backend API call
-  const tutorMatch: TutorMatch = {
-    id: "tutor_123",
-    name: "Dr. Sarah Martinez",
-    specialty: "Mathematics & Learning Disabilities",
-    experience: "8 years",
-    rating: 4.9,
-    bio: "Specialized in teaching students with learning differences, particularly in STEM subjects. PhD in Special Education.",
-    matchReason: "Perfect match based on your math interests and learning preferences!"
+  const [tutorMatch, setTutorMatch] = useState<TutorMatch | null>(null)
+  const [isMatching, setIsMatching] = useState(false)
+
+  const handleRegistrationComplete = async (studentData: Student) => {
+    setViewState('loading')
+    setIsMatching(true)
+    
+    const minLoadingTime = 10000 // 10 seconds minimum
+    
+    try {
+      // Call the parent's onRegistration which handles the API call
+      const updatedStudentData = await onRegistration(studentData)
+      
+      // Check if tutor data was returned from the API
+      if (updatedStudentData.tutor_id && updatedStudentData.tutor_name) {
+        console.log('Using tutor match from API:', updatedStudentData.tutor_id, updatedStudentData.tutor_name)
+        
+        // Transform the tutor data to frontend format
+        const transformedTutor: TutorMatch = {
+          id: updatedStudentData.tutor_id,
+          name: updatedStudentData.tutor_name,
+          specialty: "Personalized Tutoring",
+          experience: "Experienced Tutor", 
+          rating: 4.8,
+          bio: "Dedicated tutor committed to helping you succeed with personalized learning strategies.",
+          matchReason: "Perfect match found based on your learning preferences and needs!"
+        }
+        
+        setTutorMatch(transformedTutor)
+        
+        // Show loading for the full 10 seconds
+        setTimeout(() => {
+          setViewState('matched')
+          setShowConfetti(true)
+          setIsMatching(false)
+          
+          // Hide confetti after 5 seconds
+          setTimeout(() => {
+            setShowConfetti(false)
+          }, 5000)
+        }, minLoadingTime)
+        
+      } else {
+        console.log('No tutor data in API response, using fallback')
+        // Fallback if no tutor data
+        handleFallbackMatch(minLoadingTime)
+      }
+    } catch (error) {
+      console.error('Error during registration:', error)
+      handleFallbackMatch(minLoadingTime)
+    }
   }
 
-  const handleRegistrationComplete = (studentData: Student) => {
-    onRegistration(studentData)
-    setViewState('loading')
+  const handleFallbackMatch = (remainingTime: number) => {
+    const fallbackTutor: TutorMatch = {
+      id: "tutor_fallback",
+      name: "Dr. Sarah Martinez",
+      specialty: "Mathematics & Learning Disabilities",
+      experience: "8 years",
+      rating: 4.9,
+      bio: "Specialized in teaching students with learning differences, particularly in STEM subjects. PhD in Special Education.",
+      matchReason: "Perfect match based on your preferences!"
+    }
     
-    // TODO: Replace with actual backend matching API call
-    // Simulate tutor matching process
+    setTutorMatch(fallbackTutor)
+    
     setTimeout(() => {
       setViewState('matched')
       setShowConfetti(true)
+      setIsMatching(false)
       
-      // Hide confetti after 5 seconds
       setTimeout(() => {
         setShowConfetti(false)
       }, 5000)
-      
-      // Show chatbot after 3 seconds of showing the match
-      setTimeout(() => {
-        setViewState('chatbot')
-      }, 3000)
-    }, 7000) // Show loading for 7 seconds
+    }, Math.max(0, remainingTime))
   }
   
   // Get window dimensions for confetti
@@ -170,8 +213,12 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
               </div>
               
               <div className="text-center space-y-2">
-                <p className="text-primary font-serif font-medium">Analyzing your preferences...</p>
-                <p className="text-sm text-muted-foreground font-serif">This may take a few moments</p>
+                <p className="text-primary font-serif font-medium">
+                  {isMatching ? "Finding your perfect tutor match..." : "Analyzing your preferences..."}
+                </p>
+                <p className="text-sm text-muted-foreground font-serif">
+                  This process takes approximately 10 seconds
+                </p>
               </div>
             </div>
             
@@ -194,7 +241,7 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
           </div>
         )}
         
-        {viewState === 'matched' && (
+        {viewState === 'matched' && tutorMatch && (
           <div className="space-y-6">
             {/* Match Found Header */}
             <div className="text-center space-y-4">
@@ -254,7 +301,7 @@ export function StudentView({ onRegistration, onLogout }: StudentViewProps) {
           </div>
         )}
         
-        {viewState === 'chatbot' && (
+        {viewState === 'chatbot' && tutorMatch && (
           <div className="space-y-6">
             {/* Quick Summary Card */}
             <Card className="border-2 border-accent bg-accent/10">
