@@ -25,3 +25,6 @@ class StudentFileService:
     def get_file(self, student_id: str) -> StudentFile:
         response = self.table.get_item(Key={'student_id': student_id})
         return response.get('Item')
+
+    def save_file(self, student_file: StudentFile):
+        return self.table.put_item(Item=student_file.model_dump())
