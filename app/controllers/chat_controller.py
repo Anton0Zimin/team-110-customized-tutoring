@@ -272,47 +272,66 @@ Respond in this format:
 
 def build_tutor_chat_prompt(student, tutor, message, subject, class_material=None):
     prompt = f"""
-You are an expert tutoring assistant helping a tutor better understand how to support a student with disabilities.
+You are an expert disability services tutoring consultant with deep knowledge of evidence-based practices for supporting students with disabilities in academic settings.
 
-The tutor has asked: "{message}"
+TUTOR QUESTION: "{message}"
 
-Provide specific, actionable guidance based on the student's profile and learning needs. Focus on practical tutoring strategies, accommodations, and teaching approaches.
-
-<Student Profile>
-- Disability: {student["primary_disability"]}
+STUDENT CONTEXT:
+- Primary Disability: {student["primary_disability"]}
 - Learning Style: {student["learning_preferences"]["style"]}
-- Modality: {student["learning_preferences"]["modality"]}
-- Format: {student["learning_preferences"]["format"]}
-- Accommodations: {', '.join(student["accommodations_needed"])}
-- Subject: {subject}
+- Preferred Modality: {student["learning_preferences"]["modality"]}
+- Session Format: {student["learning_preferences"]["format"]}
+- Required Accommodations: {', '.join(student["accommodations_needed"])}
+- Subject Area: {subject}
 """
 
     if tutor:
         prompt += f"""
 
-<Tutor Profile>
-- Style: {tutor["tutoring_style"]}
-- Subjects: {', '.join(tutor["subjects"])}
-- Tools: {', '.join(tutor["tools_or_technologies"])}
-- Accessibility Skills: {', '.join(tutor["accommodation_skills"])}
+TUTOR BACKGROUND:
+- Teaching Style: {tutor["tutoring_style"]}
+- Subject Expertise: {', '.join(tutor["subjects"])}
+- Available Tools: {', '.join(tutor["tools_or_technologies"])}
+- Accommodation Experience: {', '.join(tutor["accommodation_skills"])}
 """
 
     if class_material:
         prompt += f"""
 
-<Class Material Context>
+CURRENT LESSON CONTENT:
 {class_material}
 """
 
-    prompt += """
+    prompt += f"""
 
-Provide specific recommendations on:
-1. Teaching strategies that align with the student's disability and learning preferences
-2. How to implement the required accommodations effectively
-3. Tools or techniques that would be most helpful
-4. Potential challenges to anticipate and how to address them
+PROVIDE CUSTOMIZED GUIDANCE:
 
-Answer the tutor's question with practical, actionable advice.
+1. DISABILITY-SPECIFIC STRATEGIES:
+   - How does {student["primary_disability"]} typically impact learning in {subject}?
+   - What evidence-based teaching methods work best for this disability?
+   - How should content be presented to maximize comprehension?
+
+2. ACCOMMODATION IMPLEMENTATION:
+   - Step-by-step guidance for implementing: {', '.join(student["accommodations_needed"])}
+   - How to seamlessly integrate accommodations without stigmatization
+   - Backup strategies if primary accommodations aren't working
+
+3. LEARNING STYLE OPTIMIZATION:
+   - Specific techniques for {student["learning_preferences"]["style"]} learners
+   - How to adapt {student["learning_preferences"]["modality"]} delivery for this disability
+   - Best practices for {student["learning_preferences"]["format"]} sessions
+
+4. PROACTIVE PROBLEM-SOLVING:
+   - Common challenges students with {student["primary_disability"]} face in {subject}
+   - Early warning signs of frustration or disengagement
+   - Strategies to maintain motivation and confidence
+
+5. PRACTICAL NEXT STEPS:
+   - Immediate actions the tutor can take
+   - Resources or materials to prepare
+   - How to measure progress and adjust approach
+
+Focus on actionable, research-backed strategies that respect the student's dignity and promote independence.
 """
 
     return prompt
