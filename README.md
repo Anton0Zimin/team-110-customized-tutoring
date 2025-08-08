@@ -12,9 +12,9 @@ CCC AI Summer Camp 2025
 ## AWS Bedrock Use-Cases
 - For tutor:
     - Knowledge Base + context from DynamoDB - generate a summary study plan for a student.
-    - Knowledge Base + context from DynamoDB - chat bot for a tutor.
+    - Knowledge Base + context from DynamoDB - chat bot for a tutor. AWS handles the chat session.
 - For student:
-    - Context from DynamoDB - chat bot for a student.
+    - Context from DynamoDB - chat bot for a student. AWS handles the chat session.
 
 ### Source Documents for RAG
 - Effective Practices for Online Tutoring
