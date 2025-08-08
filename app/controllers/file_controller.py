@@ -1,5 +1,7 @@
+from io import BytesIO
 from fastapi import APIRouter, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
+import pymupdf as fitz
 
 from models.student_file import StudentFile
 from services.student_file_service import StudentFileService
@@ -14,8 +16,7 @@ async def upload_file(web_request: Request, file: UploadFile = File(...)):
     if file.content_type == "text/plain":
         content = await read_text_file(file)
     elif file.content_type == "application/pdf":
-        # TODO: Add support for PDF files.
-        raise HTTPException(status_code=400, detail="Unsupported file type")
+        content = await read_pdf_file(file)
     else:
         raise HTTPException(status_code=400, detail="Unsupported file type")
 
@@ -42,3 +43,21 @@ async def read_text_file(file: UploadFile):
         text_content = None  # Not a UTF-8 text file
 
     return text_content
+
+async def read_pdf_file(file: UploadFile):
+    # Read the uploaded file into memory as bytes
+    file_bytes = await file.read()
+
+    # Use BytesIO to create a file-like object from bytes
+    pdf_stream = BytesIO(file_bytes)
+
+    # Open PDF from the byte stream using fitz
+    doc = fitz.open(stream=pdf_stream.read(), filetype="pdf")
+
+    # Extract text from all pages
+    all_text = ""
+    for page_num in range(doc.page_count):
+        page = doc.load_page(page_num)
+        all_text += page.get_text()
+
+    return all_text
