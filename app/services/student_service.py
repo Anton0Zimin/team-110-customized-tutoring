@@ -1,4 +1,5 @@
 import boto3
+from services.student_file_service import StudentFileService
 from models.student_profile import StudentProfile
 
 class StudentService:
@@ -7,9 +8,9 @@ class StudentService:
         self.table = self.dynamodb.Table('Students')
 
     def get_student(self, student_id: str):
-
         response = self.table.get_item(Key={'student_id': student_id})
         return response.get('Item')
 
     def add_student(self, student: StudentProfile):
-        return self.table.put_item(Item=student.model_dump())
+        self.table.put_item(Item=student.model_dump())
+        return StudentFileService().copy_template(student.student_id)

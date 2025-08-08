@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import os
 import logging
+from services.student_file_service import StudentFileService
 from services.student_service import StudentService
 from services.tutor_service import TutorService
 from prompts import summary_plan_prompt
@@ -20,106 +21,6 @@ class ChatRequest(BaseModel):
     message: str
     subject: str = "General"
     tutor_id: str = None
-    class_material: str = """
-
-What is Deep Learning
-by Jeff Anderson
-
-
-Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns).
-
-ORIGINAL: Let's define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
-
-NEW: Learning is a process in which your mind and body undergo a repeated experience that, overtime, changes your knowledge, beliefs
-
-
-
-
-Rewrite the definition of deep learning in your own words. Be sure to identify the different components of deep learning. Put focused energy into developing your ideas of what deep learning is, what it feels like, and how you know when you are engaged in deep learning. My hope is that you can use this work to spend more time in deep learning in every class and to start to identify when your teachers implement policies that are harmful to deep learning.
-
-
-
-
-Describe what it feels like when you engage in deep learning. What type of subjects and topics do you already do learn deeply about? When are you most excited about engaging in deep learning?
-
-
-
-
-Rewrite the definition of shallow learning in your own words. Be sure to identify the different components of deep learning. Do your best to figure out what shallow learning means to you, what it feels like, and how you know when you are engaged in shallow learning. If you can identify when your teachers implement policies that are force you to learn in shallow ways, then you can develop strategies to counter-act these policies so that you can maximize the amount of time you spend learning deeply.
-
-
-
-
-Describe what it feels like when you learn in a shallow way. When do you tend to engage in shallow learning? What factors in your life and what type of classroom policies tend to make you focus on shallow learning rather than deep learning?
-
-
-
-
-
-
-How is your learning connected to your motivation? If you think about when you are engaged in deep learning versus shallow learning, how much of this has to do with the level and types of motivation you bring into your learning? As you respond, think about the differences extrinsic motivation and intrinsic motivation.
-
-
-
-
-
-
-
-
-
-
-"""
-
-class_material = """
-
-What is Deep Learning
-by Jeff Anderson
-
-
-Rewrite the definition of learning in your own words. Be sure to identify the different components of learning. Do your best to create working draft of what learning is so that you can judge your work in every college class on your own definition of what learning is (rather than on the arbitrary and harmful grades that your teacher assigns).
-
-ORIGINAL: Let's define learning as a growth process that happens inside your body and leads to changes in your knowledge, beliefs, behaviors, or attitudes. These transformations occur based on your experiences and increase your potential for improved performance and future learning
-
-NEW: Learning is a process in which your mind and body undergo a repeated experience that, overtime, changes your knowledge, beliefs
-
-
-
-
-Rewrite the definition of deep learning in your own words. Be sure to identify the different components of deep learning. Put focused energy into developing your ideas of what deep learning is, what it feels like, and how you know when you are engaged in deep learning. My hope is that you can use this work to spend more time in deep learning in every class and to start to identify when your teachers implement policies that are harmful to deep learning.
-
-
-
-
-Describe what it feels like when you engage in deep learning. What type of subjects and topics do you already do learn deeply about? When are you most excited about engaging in deep learning?
-
-
-
-
-Rewrite the definition of shallow learning in your own words. Be sure to identify the different components of deep learning. Do your best to figure out what shallow learning means to you, what it feels like, and how you know when you are engaged in shallow learning. If you can identify when your teachers implement policies that are force you to learn in shallow ways, then you can develop strategies to counter-act these policies so that you can maximize the amount of time you spend learning deeply.
-
-
-
-
-Describe what it feels like when you learn in a shallow way. When do you tend to engage in shallow learning? What factors in your life and what type of classroom policies tend to make you focus on shallow learning rather than deep learning?
-
-
-
-
-
-
-How is your learning connected to your motivation? If you think about when you are engaged in deep learning versus shallow learning, how much of this has to do with the level and types of motivation you bring into your learning? As you respond, think about the differences extrinsic motivation and intrinsic motivation.
-
-
-
-
-
-
-
-
-
-
-"""
-
 
 @router.get("/{student_id}/summary")
 def get_summary_plan(student_id: str):
@@ -129,7 +30,9 @@ def get_summary_plan(student_id: str):
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
 
-        prompt = build_prompt(student, tutor, "General Study Plan")
+        class_material = StudentFileService().get_file(student_id)
+
+        prompt = build_prompt(student, tutor, class_material)
 
         response = bedrock.retrieve_and_generate(
             input={
@@ -176,13 +79,15 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
             tutor = tutor_service.get_tutor(request.tutor_id)
             logger.info(f"Tutor found: {tutor is not None}")
 
+        class_material = StudentFileService().get_file(student_id)
+
         # Build chat-specific prompt for tutor assistance
         prompt = build_tutor_chat_prompt(
             student,
             tutor,
             request.message,
             request.subject,
-            request.class_material if request.class_material else None
+            class_material
         )
         logger.info(f"Generated prompt length: {len(prompt)}")
 
@@ -277,47 +182,66 @@ Respond in this format:
 
 def build_tutor_chat_prompt(student, tutor, message, subject, class_material=None):
     prompt = f"""
-You are an expert tutoring assistant helping a tutor better understand how to support a student with disabilities.
+You are an expert disability services tutoring consultant with deep knowledge of evidence-based practices for supporting students with disabilities in academic settings.
 
-The tutor has asked: "{message}"
+TUTOR QUESTION: "{message}"
 
-Provide specific, actionable guidance based on the student's profile and learning needs. Focus on practical tutoring strategies, accommodations, and teaching approaches.
-
-<Student Profile>
-- Disability: {student["primary_disability"]}
+STUDENT CONTEXT:
+- Primary Disability: {student["primary_disability"]}
 - Learning Style: {student["learning_preferences"]["style"]}
-- Modality: {student["learning_preferences"]["modality"]}
-- Format: {student["learning_preferences"]["format"]}
-- Accommodations: {', '.join(student["accommodations_needed"])}
-- Subject: {subject}
+- Preferred Modality: {student["learning_preferences"]["modality"]}
+- Session Format: {student["learning_preferences"]["format"]}
+- Required Accommodations: {', '.join(student["accommodations_needed"])}
+- Subject Area: {subject}
 """
 
     if tutor:
         prompt += f"""
 
-<Tutor Profile>
-- Style: {tutor["tutoring_style"]}
-- Subjects: {', '.join(tutor["subjects"])}
-- Tools: {', '.join(tutor["tools_or_technologies"])}
-- Accessibility Skills: {', '.join(tutor["accommodation_skills"])}
+TUTOR BACKGROUND:
+- Teaching Style: {tutor["tutoring_style"]}
+- Subject Expertise: {', '.join(tutor["subjects"])}
+- Available Tools: {', '.join(tutor["tools_or_technologies"])}
+- Accommodation Experience: {', '.join(tutor["accommodation_skills"])}
 """
 
     if class_material:
         prompt += f"""
 
-<Class Material Context>
+CURRENT LESSON CONTENT:
 {class_material}
 """
 
-    prompt += """
+    prompt += f"""
 
-Provide specific recommendations on:
-1. Teaching strategies that align with the student's disability and learning preferences
-2. How to implement the required accommodations effectively
-3. Tools or techniques that would be most helpful
-4. Potential challenges to anticipate and how to address them
+PROVIDE CUSTOMIZED GUIDANCE:
 
-Answer the tutor's question with practical, actionable advice.
+1. DISABILITY-SPECIFIC STRATEGIES:
+   - How does {student["primary_disability"]} typically impact learning in {subject}?
+   - What evidence-based teaching methods work best for this disability?
+   - How should content be presented to maximize comprehension?
+
+2. ACCOMMODATION IMPLEMENTATION:
+   - Step-by-step guidance for implementing: {', '.join(student["accommodations_needed"])}
+   - How to seamlessly integrate accommodations without stigmatization
+   - Backup strategies if primary accommodations aren't working
+
+3. LEARNING STYLE OPTIMIZATION:
+   - Specific techniques for {student["learning_preferences"]["style"]} learners
+   - How to adapt {student["learning_preferences"]["modality"]} delivery for this disability
+   - Best practices for {student["learning_preferences"]["format"]} sessions
+
+4. PROACTIVE PROBLEM-SOLVING:
+   - Common challenges students with {student["primary_disability"]} face in {subject}
+   - Early warning signs of frustration or disengagement
+   - Strategies to maintain motivation and confidence
+
+5. PRACTICAL NEXT STEPS:
+   - Immediate actions the tutor can take
+   - Resources or materials to prepare
+   - How to measure progress and adjust approach
+
+Focus on actionable, research-backed strategies that respect the student's dignity and promote independence.
 """
 
     return prompt
