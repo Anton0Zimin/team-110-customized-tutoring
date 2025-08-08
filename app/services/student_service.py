@@ -24,13 +24,21 @@ class StudentService:
         tutors_response = tutors_table.scan()
         tutors = tutors_response.get('Items', [])
 
-        student_dynamo_format = convert_student_to_dynamo_format(student.model_dump())
-        matched_tutors = match_student_to_tutor(student_dynamo_format, tutors)
+        if student.tutor_id == None:
+            student_dynamo_format = convert_student_to_dynamo_format(student.model_dump())
+            matched_tutors = match_student_to_tutor(student_dynamo_format, tutors)
 
-        file_result = StudentFileService().copy_template(student.student_id)
+            logger.debug(f"matched_tutors: {matched_tutors}")
 
-        logger.debug(f"matched_tutors: {matched_tutors}")
+            if matched_tutors:
+                student.tutor_id = matched_tutors[0]['tutor_id']
+                student.tutor_name = matched_tutors[0]['display_name']
+                self.table.put_item(Item=student.model_dump())
+
+        # Copy a template from DynamoDB.
+        StudentFileService().copy_template(student.student_id)
+
         return {
-            'file_result': file_result,
-            'matched_tutors': matched_tutors
+            "tutor_id": student.tutor_id,
+            "tutor_name": student.tutor_name
         }

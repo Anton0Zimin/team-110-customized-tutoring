@@ -35,3 +35,5 @@ class StudentProfile(BaseModel):
     availability: List[AvailabilityItem]
     learning_preferences: LearningPreferences
     additional_info: Optional[str] = ""
+    tutor_id: Optional[str] = None
+    tutor_name: Optional[str] = None

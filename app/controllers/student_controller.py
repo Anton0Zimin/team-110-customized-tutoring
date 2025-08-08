@@ -27,7 +27,11 @@ async def create_or_update_student(student: StudentProfile, student_id: str, web
     student_service = StudentService()
 
     student_service.add_student(student)
-    return {"detail": "Student was created/updated."}
+    return {
+        "tutor_id": student.tutor_id,
+        "tutor_name": student.tutor_name,
+        "detail": "Student was created/updated."
+    }
 
 @router.get("/")
 def get_all_students(web_request: Request, response_model=List[StudentProfile]):
