@@ -10,8 +10,6 @@ from prompts import summary_plan_prompt
 
 KNOWLEDGE_BASE_ID = os.getenv("KNOWLEDGE_BASE_ID")
 
-
-
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -74,11 +72,9 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
         if not student:
             raise HTTPException(status_code=404, detail="Student not found")
 
-        # Get tutor data if tutor_id is provided
-        tutor = None
-        if request.tutor_id:
-            tutor = tutor_service.get_tutor(request.tutor_id)
-            logger.info(f"Tutor found: {tutor is not None}")
+        # Get tutor data
+        tutor = tutor_service.get_tutor(web_request.state.user_id)
+        logger.info(f"Tutor found: {tutor is not None}")
 
         class_material = StudentFileService().get_file(student_id)
 
