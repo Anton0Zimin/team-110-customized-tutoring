@@ -6,7 +6,7 @@ import { TutorChatbot } from "@/components/tutor-chatbot"
 import { StudyPlan } from "@/components/study-plan"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import type { Student } from "@/app/page"
-import { LogOut, User, Clock, BookOpen, Brain } from "lucide-react"
+import { LogOut, User, Clock, BookOpen, Brain, Star } from "lucide-react"
 import { useEffect, useState } from "react"
 import { fetchWithApi, getAccessToken } from "@/lib/fetchWithToken"
 import { API_BASE } from "@/lib/constants"
@@ -16,10 +16,18 @@ interface TutorViewProps {
   currentStudent: Student | null
   onStudentSelect: (student: Student) => void
   onLogout: () => void
+  tutorId?: string
 }
 
-export function TutorView({ students2, currentStudent, onStudentSelect, onLogout }: TutorViewProps) {
+export function TutorView({ students2, currentStudent, onStudentSelect, onLogout, tutorId }: TutorViewProps) {
   const [students, setStudents] = useState<Student[]>([]);
+
+  const isMyTutee = (student: Student) => {
+    return tutorId && student.tutor_id === tutorId;
+  };
+
+  const myTutees = students.filter(isMyTutee);
+  const otherStudents = students.filter(student => !isMyTutee(student));
 
   useEffect(() => {
     // 1. Create an async function inside the effect
@@ -86,17 +94,39 @@ export function TutorView({ students2, currentStudent, onStudentSelect, onLogout
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {students.map((student) => (
+              <div className="space-y-8">
+                {/* My Tutees Section */}
+                {myTutees.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Star className="w-5 h-5 text-[#8B1538] dark:text-primary fill-current" />
+                      <h3 className="text-xl font-serif font-bold text-[#8B1538] dark:text-primary">
+                        My Tutees ({myTutees.length})
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {myTutees.map((student) => (
                   <Card
                     key={student.student_id}
-                    className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary bg-card"
+                    className={`cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary bg-card ${
+                      isMyTutee(student) ? 'border-[#8B1538] dark:border-primary bg-[#8B1538]/5 dark:bg-primary/5' : ''
+                    }`}
                     onClick={() => onStudentSelect(student)}
                   >
                     <CardHeader>
-                      <CardTitle className="font-serif text-primary flex items-center">
-                        <User className="w-5 h-5 mr-2" />
-                        {student.display_name}
+                      <CardTitle className="font-serif text-primary flex items-center justify-between">
+                        <div className="flex items-center">
+                          <User className="w-5 h-5 mr-2" />
+                          {student.display_name}
+                        </div>
+                        {isMyTutee(student) && (
+                          <div className="flex items-center gap-1">
+                            <Star className="w-4 h-4 text-[#8B1538] dark:text-primary fill-current" />
+                            <Badge variant="default" className="bg-[#8B1538] dark:bg-primary text-white font-serif text-xs">
+                              My Tutee
+                            </Badge>
+                          </div>
+                        )}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -129,9 +159,71 @@ export function TutorView({ students2, currentStudent, onStudentSelect, onLogout
                           {student.learning_preferences?.modality} • {student.learning_preferences?.format}
                         </span>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        </CardContent>
+                      </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Other Students Section */}
+                {otherStudents.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <User className="w-5 h-5 text-muted-foreground" />
+                      <h3 className="text-xl font-serif font-bold text-muted-foreground">
+                        Other Students ({otherStudents.length})
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {otherStudents.map((student) => (
+                        <Card
+                          key={student.student_id}
+                          className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary bg-card"
+                          onClick={() => onStudentSelect(student)}
+                        >
+                          <CardHeader>
+                            <CardTitle className="font-serif text-primary flex items-center">
+                              <User className="w-5 h-5 mr-2" />
+                              {student.display_name}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div className="flex items-center space-x-2">
+                              <Brain className="w-4 h-4 text-muted-foreground" />
+                              <span className="font-serif text-sm">{student.primary_disability}</span>
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <BookOpen className="w-4 h-4 text-muted-foreground" />
+                              <span className="font-serif text-sm">{student.learning_preferences?.style}</span>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1">
+                              {student.preferred_subjects.slice(0, 3).map((subject) => (
+                                <Badge key={subject} variant="secondary" className="font-serif text-xs">
+                                  {subject}
+                                </Badge>
+                              ))}
+                              {student.preferred_subjects.length > 3 && (
+                                <Badge variant="secondary" className="font-serif text-xs">
+                                  +{student.preferred_subjects.length - 3} more
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                              <Clock className="w-4 h-4" />
+                              <span className="font-serif">
+                                {student.learning_preferences?.modality} • {student.learning_preferences?.format}
+                              </span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -228,7 +320,7 @@ export function TutorView({ students2, currentStudent, onStudentSelect, onLogout
                   <TutorChatbot 
                     student={currentStudent} 
                     authToken={getAccessToken() || undefined}
-                    tutorId={undefined}
+                    tutorId={tutorId}
                   />
                 </CardContent>
               </Card>

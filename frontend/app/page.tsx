@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { LoginScreen } from "@/components/login-screen"
 import { StudentView } from "@/components/student-view"
 import { TutorView } from "@/components/tutor-view"
@@ -38,10 +38,31 @@ export default function Home() {
   const [students, setStudents] = useState<Student[]>([])
   const [currentStudent, setCurrentStudent] = useState<Student | null>(null)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [tutorId, setTutorId] = useState<string | undefined>(undefined)
 
   const handleLogin = (role: UserRole) => {
     setUserRole(role)
   }
+
+  useEffect(() => {
+    if (userRole === "tutor") {
+      const fetchTutorId = async () => {
+        try {
+          const response = await fetchWithApi(API_BASE + "/api/auth/me");
+          if (response.ok) {
+            const data = await response.json();
+            setTutorId(data.user_id);
+          } else {
+            setTutorId(undefined);
+          }
+        } catch {
+          setTutorId(undefined);
+        }
+      };
+
+      fetchTutorId();
+    }
+  }, [userRole]);
 
   const handleStudentRegistration = async (studentData: Student): Promise<Student> => {
     try {
@@ -109,6 +130,7 @@ export default function Home() {
       currentStudent={currentStudent}
       onStudentSelect={setCurrentStudent}
       onLogout={handleLogout}
+      tutorId={tutorId}
     />
   )
 }
