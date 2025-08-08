@@ -211,3 +211,4 @@ app/prompts/*.txt
 container-defs.json
 *.orig
 *.bak
+app/static/version.txt

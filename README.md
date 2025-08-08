@@ -105,6 +105,8 @@ cd ..
 ```
 
 ```sh
+git rev-parse HEAD > ./app/static/version.txt
+
 aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 819351093526.dkr.ecr.us-west-2.amazonaws.com
 
 docker build -t team-110/customized-tutoring .
