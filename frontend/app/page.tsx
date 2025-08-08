@@ -29,6 +29,8 @@ export interface Student {
   preferred_subjects: string[]
   additional_info: string
   uploaded_files?: File[]
+  tutor_id?: string
+  tutor_name?: string
 }
 
 export default function Home() {
@@ -41,7 +43,7 @@ export default function Home() {
     setUserRole(role)
   }
 
-  const handleStudentRegistration = async (studentData: Student) => {
+  const handleStudentRegistration = async (studentData: Student): Promise<Student> => {
     try {
       const response = await fetchWithApi(API_BASE + `/api/students/${studentData.student_id}`, {
         method: 'PUT',
@@ -55,14 +57,27 @@ export default function Home() {
         const errorData = await response.json();
         console.error('Error submitting student registration:', errorData);
         alert('Registration failed: ' + (errorData.message || JSON.stringify(errorData)));
-        return;
+        throw new Error('Registration failed');
       }
 
-      setStudents((prev) => [...prev, studentData]);
+      const matchResult = await response.json();
+      console.log('Registration API response:', matchResult);
+      
+      // Update student data with tutor match info
+      const updatedStudentData = {
+        ...studentData,
+        tutor_id: matchResult.tutor_id,
+        tutor_name: matchResult.tutor_name
+      };
+
+      setStudents((prev) => [...prev, updatedStudentData]);
       setShowSuccessModal(true);
+      
+      return updatedStudentData;
     } catch (error) {
       console.error('Network error submitting student registration:', error);
       alert('Registration failed due to a network error. Please try again.');
+      throw error;
     }
   }
 
