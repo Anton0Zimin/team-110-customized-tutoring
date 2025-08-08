@@ -15,6 +15,7 @@ const themes = {
   ocean: 'ocean',
   sunset: 'sunset',
   lavender: 'lavender',
+  dyslexia: 'dyslexia',
 }
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {

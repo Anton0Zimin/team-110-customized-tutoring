@@ -254,6 +254,55 @@
   --sidebar-ring: oklch(0.25 0.15 260);
 }
 
+/* Dyslexia-Friendly Theme */
+.dyslexia {
+  /* High contrast cream background with dark text - easier on eyes */
+  --background: oklch(0.97 0.01 50);
+  --foreground: oklch(0.12 0.02 20);
+  --card: oklch(0.99 0.005 50);
+  --card-foreground: oklch(0.12 0.02 20);
+  --popover: oklch(0.99 0.005 50);
+  --popover-foreground: oklch(0.12 0.02 20);
+  
+  /* Warm, comfortable primary colors - avoiding harsh blues */
+  --primary: oklch(0.35 0.12 30);
+  --primary-foreground: oklch(0.99 0.005 50);
+  --secondary: oklch(0.88 0.03 50);
+  --secondary-foreground: oklch(0.35 0.12 30);
+  --muted: oklch(0.92 0.02 50);
+  --muted-foreground: oklch(0.45 0.06 30);
+  
+  /* Soft accent colors for better visual hierarchy */
+  --accent: oklch(0.75 0.08 40);
+  --accent-foreground: oklch(0.12 0.02 20);
+  
+  /* Clear error indication */
+  --destructive: oklch(0.55 0.20 25);
+  --destructive-foreground: oklch(0.99 0.005 50);
+  
+  /* Subtle but clear borders */
+  --border: oklch(0.85 0.04 50);
+  --input: oklch(0.95 0.02 50);
+  --ring: oklch(0.35 0.12 30);
+  
+  /* Chart colors with good contrast */
+  --chart-1: oklch(0.35 0.12 30);
+  --chart-2: oklch(0.45 0.10 60);
+  --chart-3: oklch(0.55 0.08 90);
+  --chart-4: oklch(0.65 0.06 120);
+  --chart-5: oklch(0.75 0.04 150);
+  
+  /* Sidebar styling */
+  --sidebar: oklch(0.99 0.005 50);
+  --sidebar-foreground: oklch(0.12 0.02 20);
+  --sidebar-primary: oklch(0.35 0.12 30);
+  --sidebar-primary-foreground: oklch(0.99 0.005 50);
+  --sidebar-accent: oklch(0.88 0.03 50);
+  --sidebar-accent-foreground: oklch(0.35 0.12 30);
+  --sidebar-border: oklch(0.85 0.04 50);
+  --sidebar-ring: oklch(0.35 0.12 30);
+}
+
 @theme inline {
   /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
 
@@ -302,6 +351,180 @@
   body {
     @apply bg-background text-foreground;
     font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  }
+  
+  /* Dyslexia-friendly styling - Apply to ALL elements */
+  .dyslexia,
+  .dyslexia *,
+  .dyslexia body,
+  .dyslexia h1, .dyslexia h2, .dyslexia h3, .dyslexia h4, .dyslexia h5, .dyslexia h6,
+  .dyslexia p, .dyslexia span, .dyslexia div, .dyslexia label,
+  .dyslexia button, .dyslexia input, .dyslexia textarea, .dyslexia select,
+  .dyslexia a, .dyslexia li, .dyslexia td, .dyslexia th,
+  .dyslexia .text-sm, .dyslexia .text-base, .dyslexia .text-lg, .dyslexia .text-xl,
+  .dyslexia .font-serif, .dyslexia .font-sans, .dyslexia .font-mono {
+    font-family: var(--font-dyslexic) !important;
+  }
+  
+  .dyslexia body {
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+  }
+  
+  .dyslexia h1, .dyslexia h2, .dyslexia h3, .dyslexia h4, .dyslexia h5, .dyslexia h6 {
+    line-height: 1.4;
+    margin-bottom: 1em;
+    font-weight: bold;
+  }
+  
+  .dyslexia p {
+    line-height: 1.7;
+    margin-bottom: 1.2em;
+    max-width: 70ch;
+  }
+  
+  .dyslexia button, .dyslexia input, .dyslexia textarea, .dyslexia select {
+    line-height: 1.5;
+    padding: 0.75rem 1rem;
+  }
+  
+  .dyslexia a {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+  
+  .dyslexia li {
+    line-height: 1.6;
+    margin-bottom: 0.5em;
+  }
+  
+  /* Enhanced focus indicators for dyslexic users */
+  .dyslexia *:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  
+  /* Better button styling for dyslexic users */
+  .dyslexia button {
+    min-height: 44px;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  
+  .dyslexia button:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  
+  /* Improved form inputs */
+  .dyslexia input, .dyslexia textarea {
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    background: var(--input);
+    font-size: 1.1rem;
+  }
+  
+  .dyslexia input:focus, .dyslexia textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px oklch(from var(--accent) l c h / 0.2);
+  }
+  
+  /* Enhanced visual hierarchy and readability */
+  .dyslexia .text-sm {
+    font-size: 1rem;
+    font-family: var(--font-dyslexic) !important;
+  }
+  
+  .dyslexia .text-base {
+    font-size: 1.1rem;
+    font-family: var(--font-dyslexic) !important;
+  }
+  
+  .dyslexia .text-lg {
+    font-size: 1.3rem;
+    font-family: var(--font-dyslexic) !important;
+  }
+  
+  .dyslexia .text-xl {
+    font-size: 1.5rem;
+    font-family: var(--font-dyslexic) !important;
+  }
+  
+  /* Override any Tailwind utility classes */
+  .dyslexia [class*="font-"],
+  .dyslexia .font-serif,
+  .dyslexia .font-sans,
+  .dyslexia .font-mono {
+    font-family: var(--font-dyslexic) !important;
+  }
+  
+  /* Override any inline styles or component library fonts */
+  .dyslexia [style*="font-family"] {
+    font-family: var(--font-dyslexic) !important;
+  }
+  
+  /* Override shadcn/ui and other component library styles */
+  .dyslexia button[class*="font-"],
+  .dyslexia div[class*="font-"],
+  .dyslexia span[class*="font-"] {
+    font-family: var(--font-dyslexic) !important;
+  }
+  
+  /* Nuclear option - override absolutely everything in dyslexia mode */
+  html.dyslexia,
+  html.dyslexia *,
+  html.dyslexia *::before,
+  html.dyslexia *::after {
+    font-family: var(--font-dyslexic) !important;
+  }
+  
+  /* Better spacing for cards and containers */
+  .dyslexia .card {
+    padding: 1.5rem;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Improved list spacing */
+  .dyslexia ul, .dyslexia ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Better table readability */
+  .dyslexia table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+  }
+  
+  .dyslexia th, .dyslexia td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-dyslexic);
+  }
+  
+  .dyslexia th {
+    background: var(--muted);
+    font-weight: bold;
+  }
+  
+  /* Avoid justified text which can be hard for dyslexic users */
+  .dyslexia * {
+    text-align: left !important;
+  }
+  
+  /* Better contrast for disabled elements */
+  .dyslexia button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    border-color: var(--muted-foreground);
   }
 }
 

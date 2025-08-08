@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Moon, Sun, Monitor, TreePine, Mountain, Shell, CloudSun, Flower } from "lucide-react"
+import { Moon, Sun, Monitor, TreePine, Mountain, Shell, CloudSun, Flower, Eye } from "lucide-react"
 import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,7 @@ const themes = [
   { value: "ocean", label: "Ocean", icon: Shell },
   { value: "sunset", label: "Sunset", icon: CloudSun },
   { value: "lavender", label: "Lavender", icon: Flower },
+  { value: "dyslexia", label: "Dyslexia-Friendly", icon: Eye },
 ]
 
 export function ThemeToggle() {
