@@ -146,10 +146,14 @@ def get_summary_plan(student_id: str):
                         }
                     },
                 }
-                
+
             }
         )
-        return json.loads(response['output']['text'])
+
+        return {
+            "response": json.loads(response['output']['text']),
+            "session_id": response.get('sessionId', None)
+        }
 
     except Exception as e:
         logger.error(f"Error generating summary: {e}")
@@ -162,7 +166,7 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
     try:
         logger.info(f"Chat request for student_id: {student_id}")
         logger.info(f"KNOWLEDGE_BASE_ID: {KNOWLEDGE_BASE_ID}")
-        
+
         # Get student data from DynamoDB
         student = student_service.get_student(student_id)
         logger.info(f"Student found: {student is not None}")
@@ -177,10 +181,10 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
 
         # Build chat-specific prompt for tutor assistance
         prompt = build_tutor_chat_prompt(
-            student, 
-            tutor, 
-            request.message, 
-            request.subject, 
+            student,
+            tutor,
+            request.message,
+            request.subject,
             request.class_material if request.class_material else None
         )
         logger.info(f"Generated prompt length: {len(prompt)}")
@@ -205,7 +209,11 @@ def get_next_chat_message(student_id: str, request: ChatRequest, web_request: Re
         )
         logger.info("Bedrock response received")
 
-        result = {"response": response['output']['text']}
+        result = {
+            "response": response['output']['text'],
+            "session_id": response.get('sessionId', None)
+        }
+
         logger.info(f"Returning response length: {len(result['response'])}")
 
         return result
