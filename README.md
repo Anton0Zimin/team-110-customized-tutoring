@@ -1,5 +1,5 @@
 # Personalized Tutoring for Disability Services Students
-CCC AI Summer Camp 2025
+CCC AI Summer Camp 2025 (Cal Poly Digital Transformation Hub and AWS)
 
 ## Project Objectives
 - Customize tutoring services to better support students with disabilities
@@ -27,6 +27,8 @@ CCC AI Summer Camp 2025
 - [Student Chat](docs/student_chat_prompt.md)
 
 ## AWS Services
+
+![](docs/infrastructure.svg)
 
 - ![](docs/bedrock.svg) AWS Bedrock + Knowledge Base + S3 Vectors + Claude Sonnet 3.5 Foundation Model
 - ![](docs/dynamodb.svg) AWS DynamoDB
